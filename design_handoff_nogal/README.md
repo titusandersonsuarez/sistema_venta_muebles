@@ -236,9 +236,10 @@ Estado del prototipo (referencia de qué necesita la app):
 `vista`, `sec` (módulo del panel), `cat`, `mat`, `precioMax`, `sel` (producto), `carrito`, `acabado`, `ar`, `chatAbierto`/`chat`/`chatTexto`, `usuario`/`clave`/`autenticado`, `desde`/`hasta`/`gran`/`barra`, y los overrides de admin (`precios`, `imgs`, `descs`, `nombres`, `nuevos`, `eliminados`).
 En producción: filtros y rango de fechas en la URL (query params), datos del servidor con React Query/SWR, sesión con cookie httpOnly, carrito en servidor o localStorage.
 
-## Arquitectura sugerida (React + .NET)
+## Arquitectura actual y extensiones futuras
 - **Front**: React 18 + TypeScript, Vite; React Router; TanStack Query para datos; react-hook-form + zod para formularios; Recharts (o barras propias como en el prototipo) para gráficas; CSS Modules o Tailwind mapeado a los tokens de `styles.css`.
-- **Back**: ASP.NET Core 8 Web API (controllers o minimal APIs), EF Core + SQL Server/PostgreSQL, ASP.NET Core Identity + JWT (o cookies) con rol `Admin`, subida de imágenes a almacenamiento de objetos (Azure Blob/S3) guardando solo la URL, FluentValidation, Serilog.
+- **Back actual**: ASP.NET Core .NET 9 Web API con controllers, EF Core 9 + SQL Server Express, JWT con BCrypt y rol `Admin`, almacenamiento local de imágenes mediante `IProductImageStorage`, migraciones automáticas y Swagger.
+- **Extensiones futuras**: almacenamiento de objetos (Azure Blob/S3), FluentValidation, Serilog, cookie httpOnly y un proveedor image-to-3D externo.
 - **Endpoints mínimos**:
   - `GET /api/products` (filtros: categoría, material, precioMax, paginación) · `GET /api/products/{slug}`
   - `POST/PUT/DELETE /api/admin/products` · `POST /api/admin/products/{id}/image` (multipart)
@@ -246,9 +247,9 @@ En producción: filtros y rango de fechas en la URL (query params), datos del se
   - `GET /api/admin/orders` · `PATCH /api/admin/orders/{id}/status`
   - `GET /api/admin/production` · `GET /api/admin/inventory`
   - `POST /api/admin/products/{id}/3d-generation` (rol `Admin`) → encola generación 3D para la imagen del producto
-  - `POST /api/contact` · `POST /api/chat` (bot; empezar con reglas, luego IA)
+  - `POST /api/contact` · `POST /api/chat` (persistencia e historial; respuestas actuales por reglas)
   - `POST /api/auth/login` · `POST /api/auth/logout`
-- **Modelo de datos**: Product(Id, Slug, Nombre, Categoria, Material, PrecioCOP, Medidas, Peso, Armado, Descripcion, ImagenUrl, Activo), ProductImage, Order(Id, Codigo, Cliente, Ciudad, Total, Estado, CreatedAt), OrderItem, Review, ProductionOrder(Etapa, Producto, DiasEnEtapa), InventoryItem(Nombre, Stock, Estado), ContactMessage, User.
+- **Modelo de datos actual**: Product(Id, Slug, Nombre, Categoria, Material, PrecioCOP, Medidas, Peso, Armado, Descripcion, ImagenUrl, Modelo3dUrl, ModeloUsdzUrl, Modelo3dEstado, Modelo3dError, Modelo3dSolicitadoEn, Activo), ProductImage, Order, OrderItem, ProductionOrder, InventoryItem, ContactMessage, ChatSession, ChatMessage y Usuario.
 - **Pendientes de producto**: pasarela de pago (Wompi/Mercado Pago/PayU), facturación electrónica DIAN, WhatsApp Business API, carga gestionada de modelos 3D a almacenamiento de objetos y envíos/cobertura por ciudad.
 
 ## Assets

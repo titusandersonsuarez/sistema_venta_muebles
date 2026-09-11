@@ -11,8 +11,8 @@ Eres un ingeniero de software full-stack senior. Vas a continuar el desarrollo d
 ### Estado actual del proyecto
 
 - `design_handoff_nogal/` — paquete de diseño (fuente de verdad visual): `Nogal Muebles.dc.html` (prototipo completo, tienda + panel), `styles.css` (tokens y componentes del sistema "Classical"), `sistema-classical.md` (guía de uso) y `README.md` (spec funcional completa de cada pantalla).
-- `backend/NogalApi/` — API en ASP.NET Core 9 + EF Core + SQL Server Express (`.\SQLEXPRESS`, base `NogalDb`). Ya implementado: modelos `Usuario`, `Product`, `ProductImage`, `Order` y `OrderItem`; `AppDbContext`; servicios de autenticación, productos, pedidos y ventas; JWT con BCrypt; seed automático; CORS; Swagger con auth Bearer; almacenamiento local de imágenes; `Dockerfile`.
-- `frontend/nogal-web/` — React 18 + TypeScript + Vite. Ya implementado: `styles.css` copiado del paquete de diseño (úsalo tal cual, no reinventes tokens), cliente `apiFetch` con manejo de token/errores, `AuthContext` + `RequireAuth`, `LoginPage` (fiel al prototipo), `AdminLayout` (rail lateral con los 4 módulos + topbar) y una página *placeholder* por módulo (Resumen, Pedidos, Productos, Producción) más un `HomePlaceholder` para la tienda pública.
+- `backend/NogalApi/` — API en ASP.NET Core 9 + EF Core + SQL Server Express (`.\SQLEXPRESS`, base `NogalDb`). Ya implementado: modelos de usuarios, productos, pedidos, ventas, producción, inventario y comunicación; servicios por interfaz; JWT con BCrypt; seed automático; CORS; Swagger; almacenamiento local de imágenes; cola de generación 3D; `Dockerfile`.
+- `frontend/nogal-web/` — React 18 + TypeScript + Vite. Ya implementado: tienda pública, catálogo, ficha, home, contacto, chat, login, panel, productos, pedidos, dashboard, producción, inventario y visor AR con `@google/model-viewer`.
 - El `docker-compose.yml` histórico de Postgres no se usa: el backend actual se conecta a SQL Server Express mediante `Trusted_Connection=True` y `TrustServerCertificate=True`.
 
 Antes de escribir código, **lee `design_handoff_nogal/README.md` completo** (ahí está la especificación pantalla por pantalla, el modelo de datos sugerido y los endpoints mínimos) y **revisa el HTML del prototipo** para copiar la disposición y las clases exactas (`.card`, `.table`, `.tag`, `.seg`, `.dialog`, etc.) — no inventes markup nuevo.
@@ -25,14 +25,19 @@ Antes de escribir código, **lee `design_handoff_nogal/README.md` completo** (ah
 4. Las imágenes de producto se guardan como **URL** (bucket S3/GCS), nunca como binario en la base de datos.
 5. Cada módulo nuevo necesita: migración de EF Core, endpoints REST, y la pantalla React conectada de verdad a la API (no mocks una vez que el backend exista).
 
-### Qué sigue (en este orden)
+### Estado del roadmap
 
-1. **Productos (CRUD)** — backend: modelo `Product` (Id, Slug, Nombre, Categoria, Material, PrecioCOP, Medidas, Peso, Armado, Descripcion, Estado [Disponible/EnProceso/Vendido], ImagenUrl, Activo) + `ProductImage`, subida de imagen (multipart → bucket, guarda solo la URL), endpoints `GET/POST/PUT/DELETE /api/admin/products` y `GET /api/products` (público, con filtros categoría/material/precioMax). Frontend: reemplaza el placeholder de `ProductosPage` con el formulario "Subir un producto nuevo" y la tabla editable (miniatura, nombre, categoría, precio, descripción, foto, estado, acciones Restaurar/Eliminar) tal como la describe el README.
-2. **Catálogo público + ficha de producto** — usa `GET /api/products`: página de catálogo con los filtros controlados por estado (categoría, precio máximo, material) y la ficha de producto (galería, precio, control de acabado, tabla de medidas) consumiendo el mismo endpoint.
-3. **Pedidos** — modelo `Order`/`OrderItem`, tabla en el panel (`GET/PATCH /api/admin/orders`) con los estados En ruta / En taller / Entregado / Pago pendiente.
-4. **Resumen (dashboard)** — implementado. El endpoint `GET /api/admin/sales?from=&to=&granularity=day|week|month` devuelve totales, buckets, mezcla por categoría y top 5; la pantalla React consume datos reales.
-5. **Producción** — modelo `ProductionOrder` / `InventoryItem`, tarjetas de etapa y tabla de materiales por reponer.
-6. **Home + contacto + chat "Nogalito"** — home pública completa, formulario de contacto (`POST /api/contact`), y el chat: empieza con `POST /api/chat` por palabras clave (igual al prototipo) dejando el contrato listo para enchufar un LLM (Claude API) más adelante usando el catálogo real como contexto.
+1. **Productos, catálogo y ficha** — cerrado.
+2. **Pedidos** — cerrado.
+3. **Resumen/dashboard** — cerrado y conectado a SQL Server real.
+4. **Producción e inventario** — cerrado y conectado a endpoints reales.
+5. **Home, contacto y chat Nogalito** — cerrado con persistencia e historial.
+6. **AR 3D por producto** — visor GLB/USDZ y URLs editables cerrados.
+7. **Generación automática 3D** — cola, estados, migraciones y endpoint cerrados; falta únicamente elegir/configurar el proveedor image-to-3D y su adaptador real.
+
+### Próximo trabajo recomendado
+
+No rehacer módulos existentes. El siguiente paso es implementar el adaptador del proveedor 3D elegido, usando API key en variables de entorno, polling si el proveedor trabaja de forma asíncrona y devolución de URLs GLB/USDZ. Después conviene añadir pruebas de integración para el flujo `imagen → cola → modelo disponible/error`.
 
 Trabaja un módulo a la vez, de punta a punta (migración → endpoint → pantalla), y no avances al siguiente hasta que el anterior compile y funcione contra la base de datos real. Si necesitas decidir algo de negocio que el README no defina (zonas de envío, métodos de pago, textos de marketing), pregúntame en vez de inventarlo.
 
@@ -62,9 +67,9 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - Tabla editable con miniatura, nombre, categoría, precio (formato COP en vivo), descripción, estado (Disponible / EnProceso / Vendido).
   - Guardar cambios explícito por fila (patrón borrador → Guardar), soft delete y restaurar desde chips de eliminados.
   - Subida de foto multipart con guardado en disco (`wwwroot/uploads/products/`) — la BD solo guarda la URL relativa.
-  - Endpoint público con filtros (`categoria`, `material`, `precioMax`, paginación) listo, pero sin UI todavía.
+  - Endpoint público con filtros (`categoria`, `material`, `precioMax`, paginación) conectado a la UI del catálogo.
 
-**Placeholders (funcionan visualmente pero sin lógica):** Producción, Home pública completa, contacto y chat "Nogalito".
+**Módulos funcionales:** Productos, catálogo, ficha pública, pedidos, dashboard, producción, inventario, home pública, contacto y chat "Nogalito".
 
 **AR 3D por producto:** implementado con `@google/model-viewer`; la ficha usa GLB/GLTF y USDZ opcional desde las URLs guardadas en cada producto.
 
@@ -78,7 +83,7 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - `layouts/StoreLayout.tsx` — header sticky con nav (Inicio / Catálogo / La fábrica / Admin / Carrito · 0) que envuelve todas las rutas públicas.
   - `pages/store/CatalogoPage.tsx` — breadcrumb + h1 + conteo dinámico + aside con radios categoría, range precio (150k–2.5M step 50k), radios material, botón "Limpiar filtros". Grid `auto-fill minmax(200px, 1fr)` con tarjetas `.plate` 4:3.4. Estado vacío con CTA. Los filtros son estado controlado y llaman `GET /api/products` en cada cambio.
   - `pages/store/ProductoPage.tsx` — breadcrumb, dos columnas (galería `.plate` 4:3.2 + 3 miniaturas 1:1 / info kicker + h1 + precio 34px + descripción justificada). Segmentado de Acabado (Roble natural / Nogal oscuro / Lino crudo / Gris piedra) — solo UI local (la BD no tiene variantes de acabado por producto todavía). Tabla Medidas/Material/Peso/Armado/Garantía. Sección "Combina bien con" con 3 productos de otras categorías.
-  - `pages/store/HomePlaceholder.tsx` — reescrito con la sección hero del prototipo (kicker, h1 "Somos la fábrica...", CTA "Ver el catálogo", 3 cifras). Home completa (por espacio, más pedidos, servicios, reseñas, footer) queda para módulo #6.
+  - `pages/store/HomePlaceholder.tsx` — contiene la home pública implementada con hero, categorías, productos reales, AR informativo, reseñas, servicios, contacto, chat y footer.
   - `App.tsx` — rutas `/`, `/catalogo`, `/producto/:slug` envueltas por `<StoreLayout />`. `/admin/*` sigue igual con `AdminLayout` + `RequireAuth`.
   - `api/products.ts` — agregado `obtenerPorSlug(slug)`.
   - Verificación real: catálogo sin filtros, filtro por categoría, por material+precioMax, filtro imposible (estado vacío OK), ficha por slug, 404 en slug inexistente, frontend sirviendo HTML. 7/7 pasan.
@@ -241,18 +246,21 @@ IMPLEMENTADAS (migraciones aplicadas 2026-09-11)
     └── 1:N ── ProductImages ────────── galería + imagen principal
                                         └ Url, Orden, CASCADE DELETE
 
-PLANEADAS (roadmap #3–#6)
-  Orders ───────────────────────────── panel de pedidos (roadmap #3)
+IMPLEMENTADAS (migraciones aplicadas 2026-09-11)
+  Orders ───────────────────────────── panel de pedidos
     │                                   └ Estado: En ruta/En taller/Entregado/Pago pendiente
     └── 1:N ── OrderItems ──────────── FK → Products (RESTRICT recomendado)
 
-  Reviews ──────────────────────────── FK → Products (roadmap #2 — ficha de producto)
-  ProductionOrders ─────────────────── FK → Products (roadmap #5 — producción)
-  InventoryItems ───────────────────── independiente (roadmap #5 — materiales por reponer)
-  ContactMessages ──────────────────── formulario "Contáctanos" (roadmap #6)
+  ProductionOrders ─────────────────── FK → Products (producción)
+  InventoryItems ───────────────────── independiente (materiales por reponer)
+  ContactMessages ──────────────────── formulario "Contáctanos"
 
-  ChatSessions ─────────────────────── memoria del chat "Nogalito" (roadmap #6, opcional)
-    └── 1:N ── ChatMessages ────────── historial user/bot para conectar a LLM
+  ChatSessions ─────────────────────── memoria del chat "Nogalito"
+    └── 1:N ── ChatMessages ────────── historial user/bot por reglas
+
+PENDIENTE
+  Reviews ──────────────────────────── reseñas persistidas por producto
+  Proveedor image-to-3D ────────────── adaptador externo y API key
 
   __EFMigrationsHistory ────────────── auto (EF Core, no tocar)
 ```
@@ -274,6 +282,12 @@ El prompt original y el README sugerían Postgres, pero el usuario ya tenía **S
 Migraciones aplicadas:
 - `20260911160600_InitialUsuarios` — tabla `Usuarios`.
 - `20260911162006_AddProducts` — tablas `Products`, `ProductImages`, índice único en `Slug`, cascade delete.
+- `20260911170850_AddOrders` — pedidos y líneas de pedido.
+- `20260911181104_AddProductionAndInventory` — producción e inventario.
+- `20260911181956_AddCommunication` — contacto y chat.
+- `20260911183658_AddProduct3dModels` — URLs GLB/GLTF y USDZ.
+- `20260911184410_AddProduct3dGenerationStatus` — estado, error y fecha de generación 3D.
+- `20260911184558_NormalizeProduct3dState` — normaliza productos existentes a `Sin modelo`.
 
 Docker Postgres del `docker-compose.yml` original **no se usa** (Docker Desktop apagado + puerto 5432 ya ocupado por Postgres locales del usuario). El compose queda como referencia histórica.
 
@@ -296,7 +310,7 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 
 **Módulo 0 — Auth + scaffold**
 - Backend: `Models/Usuario.cs`, `Models/Auth/{LoginRequest,LoginResponse}.cs`, `Data/{AppDbContext,DbSeeder}.cs`, `Options/{JwtOptions,AdminSeedOptions}.cs`, `Services/{IAuthService,AuthService}.cs`, `Controllers/AuthController.cs`.
-- Frontend: `api/{client,auth}.ts`, `auth/{AuthContext,RequireAuth}.tsx`, `layouts/AdminLayout.tsx`, `pages/admin/LoginPage.tsx`, placeholders `{Resumen,Pedidos,Productos,Produccion}Page.tsx`, `pages/store/HomePlaceholder.tsx`, `src/vite-env.d.ts` (fix `import.meta.env`).
+- Frontend base: `api/{client,auth}.ts`, `auth/{AuthContext,RequireAuth}.tsx`, `layouts/AdminLayout.tsx`, `pages/admin/LoginPage.tsx`, `src/vite-env.d.ts` (fix `import.meta.env`). Las páginas del panel y la tienda se encuentran implementadas en sus módulos correspondientes.
 
 **Módulo 1 — Productos**
 - Backend: `Models/Product.cs`, `Models/ProductImage.cs`, `Models/Products/{ProductCatalogo,ProductDtos}.cs`, `Services/{IProductService,ProductService}.cs`, `Services/{IProductImageStorage,LocalProductImageStorage}.cs`, `Options/ImageStorageOptions.cs`, `Controllers/{AdminProductsController,ProductsController,CatalogController}.cs`, `wwwroot/uploads/products/`.
@@ -325,7 +339,12 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 | DELETE | `/api/admin/products/{id}` | Bearer | Soft delete (`Activo=false`) |
 | POST | `/api/admin/products/{id}/restore` | Bearer | Restaurar |
 | POST | `/api/admin/products/{id}/image` | Bearer (multipart) | Subir imagen (JPG/PNG/WEBP/GIF, máx 5 MB) |
+| POST | `/api/admin/products/{id}/3d-generation` | Bearer, rol Admin | Encolar generación 3D; requiere imagen de referencia |
 | GET | `/api/admin/sales?from=yyyy-MM-dd&to=yyyy-MM-dd&granularity=day\|week\|month` | Bearer, rol Admin | Dashboard: totales, buckets, categorías y top 5 |
+| GET | `/api/admin/production` | Bearer, rol Admin | Etapas y capacidad de producción |
+| GET | `/api/admin/inventory` | Bearer, rol Admin | Materiales e inventario |
+| POST | `/api/contact` | público | Guardar mensaje de contacto |
+| POST | `/api/chat` | público | Responder y persistir conversación de Nogalito |
 | GET | `/uploads/products/{archivo}` | público | Servido por `UseStaticFiles` |
 
 ### Decisiones tomadas en esta sesión
@@ -337,6 +356,7 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 - **Soft delete**: `Product.Activo = false`. Público filtra por Activo; admin puede listar inactivos con `?incluirInactivos=true`.
 - **Guardar en tabla del panel**: patrón borrador → botón "Guardar" explícito por fila (aparece cuando hay cambios). NO autosave onBlur.
 - **Dashboard**: `SalesService` excluye `Pago pendiente`; no cambiar esta regla sin actualizar la documentación y las pruebas.
+- **Generación 3D**: `Product3d:Enabled` está en `false` por defecto. La cola deja el producto en `Error` si no existe proveedor configurado; no crear GLB falsos.
 
 ### Convenciones vigentes (recordatorio)
 
