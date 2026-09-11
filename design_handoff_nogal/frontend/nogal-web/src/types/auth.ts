@@ -6,7 +6,6 @@ export interface UsuarioResumen {
 }
 
 export interface LoginResponse {
-  token: string
   expiraEn: string
   usuario: UsuarioResumen
 }

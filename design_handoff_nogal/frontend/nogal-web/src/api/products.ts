@@ -14,49 +14,44 @@ export function listarAdmin(pagina = 1, tamano = 50, incluirInactivos = true) {
     tamano: String(tamano),
     incluirInactivos: String(incluirInactivos)
   })
-  return apiFetch<PagedResult<Product>>(`/admin/products?${params.toString()}`, { auth: true })
+  return apiFetch<PagedResult<Product>>(`/admin/products?${params.toString()}`)
 }
 
 export function crear(payload: CreateProductPayload) {
   return apiFetch<Product>('/admin/products', {
     method: 'POST',
-    body: JSON.stringify(payload),
-    auth: true
+    body: JSON.stringify(payload)
   })
 }
 
 export function actualizar(id: number, payload: UpdateProductPayload) {
   return apiFetch<Product>(`/admin/products/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(payload),
-    auth: true
+    body: JSON.stringify(payload)
   })
 }
 
 export function eliminar(id: number) {
   return apiFetch<void>(`/admin/products/${id}`, {
-    method: 'DELETE',
-    auth: true
+    method: 'DELETE'
   })
 }
 
 export function restaurar(id: number) {
   return apiFetch<Product>(`/admin/products/${id}/restore`, {
-    method: 'POST',
-    auth: true
+    method: 'POST'
   })
 }
 
 export function subirImagen(id: number, archivo: File) {
   const form = new FormData()
   form.append('archivo', archivo)
-  return apiUpload<Product>(`/admin/products/${id}/image`, form, { auth: true })
+  return apiUpload<Product>(`/admin/products/${id}/image`, form)
 }
 
 export function generarModelo3d(id: number) {
   return apiFetch<Product>(`/admin/products/${id}/3d-generation`, {
-    method: 'POST',
-    auth: true
+    method: 'POST'
   })
 }
 

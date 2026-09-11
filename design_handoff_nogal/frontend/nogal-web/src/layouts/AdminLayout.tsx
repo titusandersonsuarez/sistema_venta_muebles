@@ -44,8 +44,8 @@ export function AdminLayout() {
     MODULOS.find((m) => (m.path === '/admin' ? location.pathname === m.path : location.pathname.startsWith(m.path))) ??
     MODULOS[0]
 
-  function salir() {
-    logout()
+  async function salir() {
+    await logout()
     navigate('/admin/login', { replace: true })
   }
 

@@ -41,7 +41,7 @@ No rehacer módulos existentes. Candidatos (elige uno y ciérralo punta a punta)
 
 1. **Webhook Wompi + HTTPS**: expone `POST /api/webhooks/wompi` con validación de firma `EventsSecret` para consistencia asíncrona (el cliente puede cerrar el navegador sin volver). Luego levantar el frontend en HTTPS público para poder activar `pub_prod_`.
 2. **Almacenamiento de objetos (Azure Blob / S3)**: hoy imágenes y `.glb` viven en `wwwroot/uploads/`. Cambiar `IProductImageStorage` a una implementación cloud, mantener la interfaz.
-3. **Cookie httpOnly para JWT**: hoy el token vive en `localStorage`. Migrar a cookie httpOnly con refresh + CSRF token para el panel.
+3. ~~**Cookie httpOnly para JWT**~~ — cerrado en módulo #12.
 4. **Reviews reales**: el modelo `Reviews` está en el Mermaid pero no implementado. Endpoint público de lectura, admin para moderación.
 5. **Adaptador image-to-3D real**: Meshy ya tiene service scaffolded (`MeshyProduct3dGenerationService`), falta credencial + probar contra sandbox real.
 
@@ -138,6 +138,13 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - `pages/store/HomePage.tsx` (nuevo, sustituye `HomePlaceholder.tsx`) con las 8 secciones del prototipo: hero (kicker + h1 + lead + 2 botones + 3 cifras), "Por espacio" (links a `/catalogo?categoria=X`), "Los más pedidos" (4 productos reales), banner AR (dispara `<ArDialog />`), "Lo que cuenta la gente" (3 testimonios), 4 servicios con copy completo, contacto (`POST /api/contact`) + info del taller (Cra. 56 #17-40, WhatsApp 300 000 0000), footer 4 columnas.
   - `pages/store/CatalogoPage.tsx` ahora lee y sincroniza `?categoria=X` en la URL para permitir enlaces desde la Home.
   - Estilos: usa las clases `.home-*` ya presentes en `styles.css` (no se agregó CSS nuevo).
+- [x] **12. Sesión con cookie HttpOnly (reemplaza JWT en localStorage)** — CERRADO el 2026-09-11.
+  - Backend: `AuthController.Login` graba una cookie `nogal_auth` con `HttpOnly=true`, `SameSite=Lax`, `Path=/`, `Secure` solo en no-dev, `Expires` = expiración del JWT. `AuthController.Logout` (sin `[Authorize]` para no quedar en bucle 401) la borra. `Program.cs` enseña al `JwtBearer` a leer el token de la cookie vía `OnMessageReceived` cuando falta el header `Authorization`, y agrega `AllowCredentials()` al CORS. `AuthController.Me` devuelve la misma forma que `LoginResponse.Usuario` (id: int, no string).
+  - Nuevo record `AuthenticationResult(Usuario, Token, ExpiraEn)` — el token vive ahí para que el controller lo grabe en la cookie, nunca sale al cliente. `LoginResponse` DTO ya no tiene `Token`.
+  - Frontend: `api/client.ts` reescrito — quita el flag `auth: true` y siempre manda `credentials: 'include'`. Eliminados `TOKEN_KEY`, `getItem(TOKEN_KEY)`, header `Authorization`. `AuthContext.tsx` reescrito — al montar llama `GET /api/auth/me` para hidratar `usuario`; `login()` guarda `usuario` en estado (nada de token); `logout()` es async y llama `POST /api/auth/logout`. Todos los callers en `api/{orders,products,production,sales}.ts` sin `auth: true`. `AdminLayout.tsx` await el logout antes de navegar.
+  - `Program.cs` — `UseHttpsRedirection()` solo cuando NO es Development (evita 307/503 al hacer POST sobre HTTP puro sin puerto HTTPS configurado).
+  - Verificado: `document.cookie` vacío en JS (cookie invisible por HttpOnly), `localStorage` solo tiene `nogal_carrito`, `GET /api/auth/me` con cookie → 200, sin cookie → 401, logout → limpia cookie → siguientes /me devuelven 401.
+  - **Trampa detectada en esta sesión**: El monitor de red de `claude-in-chrome` reporta `503` para respuestas `204 No Content` de logout — no es real, ni el server log ni `fetch()` desde JS confirman ese status. Ignorar; el flujo funciona.
 - [x] **11. Cierre del loop admin de pagos** — CERRADO el 2026-09-11.
   - `OrderListItemDto` gana `PagoProveedor`, `PagoTransaccionId`, `PagoActualizadoEn` (mapeados en `OrderService.MapListItem`).
   - `pages/admin/PedidosPage.tsx` — el switch `tagClasePorEstado` cubre los 6 estados: `Pago confirmado` y `En taller` = accent (acción del equipo), `Entregado` = neutral (cerrado), `Pago pendiente`/`Pago rechazado`/`En ruta` = outline. Cada fila muestra una línea bajo el código con `proveedor · txnId · fecha del pago` cuando existe.
@@ -370,18 +377,18 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 
 | Método | Ruta | Auth | Qué hace |
 |---|---|---|---|
-| POST | `/api/auth/login` | público | Devuelve JWT + datos del usuario |
-| GET | `/api/auth/me` | Bearer | Datos del usuario autenticado |
-| POST | `/api/auth/logout` | Bearer | No-op (JWT es sin estado — placeholder para blacklist futura) |
+| POST | `/api/auth/login` | público | Loguea y graba cookie HttpOnly `nogal_auth`; devuelve `{expiraEn, usuario}` (sin token) |
+| GET | `/api/auth/me` | cookie o Bearer | Datos del usuario autenticado |
+| POST | `/api/auth/logout` | público | Borra la cookie `nogal_auth`; siempre 204 |
 | GET | `/api/catalog/options` | público | Listas de categorías, materiales y estados |
 | GET | `/api/products` | público | Listar con filtros `categoria`, `material`, `precioMax`, `pagina`, `tamano` |
 | GET | `/api/products/{slug}` | público | Ficha por slug |
-| GET | `/api/admin/products` | Bearer | Listar admin (incluye inactivos si `?incluirInactivos=true`) |
-| GET | `/api/admin/products/{id}` | Bearer | Obtener por Id |
-| POST | `/api/admin/products` | Bearer | Crear |
-| PUT | `/api/admin/products/{id}` | Bearer | Actualizar |
-| DELETE | `/api/admin/products/{id}` | Bearer | Soft delete (`Activo=false`) |
-| POST | `/api/admin/products/{id}/restore` | Bearer | Restaurar |
+| GET | `/api/admin/products` | cookie o Bearer | Listar admin (incluye inactivos si `?incluirInactivos=true`) |
+| GET | `/api/admin/products/{id}` | cookie o Bearer | Obtener por Id |
+| POST | `/api/admin/products` | cookie o Bearer | Crear |
+| PUT | `/api/admin/products/{id}` | cookie o Bearer | Actualizar |
+| DELETE | `/api/admin/products/{id}` | cookie o Bearer | Soft delete (`Activo=false`) |
+| POST | `/api/admin/products/{id}/restore` | cookie o Bearer | Restaurar |
 | POST | `/api/admin/products/{id}/image` | Bearer (multipart) | Subir imagen (JPG/PNG/WEBP/GIF, máx 5 MB) |
 | POST | `/api/admin/products/{id}/3d-generation` | Bearer, rol Admin | Encolar generación 3D; requiere imagen de referencia |
 | GET | `/api/admin/sales?from=yyyy-MM-dd&to=yyyy-MM-dd&granularity=day\|week\|month` | Bearer, rol Admin | Dashboard: totales, buckets, categorías y top 5 |

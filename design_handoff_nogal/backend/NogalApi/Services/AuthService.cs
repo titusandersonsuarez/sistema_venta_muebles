@@ -21,7 +21,7 @@ public class AuthService : IAuthService
         _jwtOptions = jwtOptions.Value;
     }
 
-    public async Task<LoginResponse?> LoginAsync(string nombreUsuario, string password)
+    public async Task<AuthenticationResult?> LoginAsync(string nombreUsuario, string password)
     {
         var usuario = await _context.Usuarios
             .FirstOrDefaultAsync(u => u.NombreUsuario == nombreUsuario && u.Activo);
@@ -34,18 +34,15 @@ public class AuthService : IAuthService
         var expiraEn = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpireMinutes);
         var token = GenerarToken(usuario.Id, usuario.NombreUsuario, usuario.Nombre, usuario.Rol, expiraEn);
 
-        return new LoginResponse
+        var resumen = new UsuarioResumen
         {
-            Token = token,
-            ExpiraEn = expiraEn,
-            Usuario = new UsuarioResumen
-            {
-                Id = usuario.Id,
-                NombreUsuario = usuario.NombreUsuario,
-                Nombre = usuario.Nombre,
-                Rol = usuario.Rol
-            }
+            Id = usuario.Id,
+            NombreUsuario = usuario.NombreUsuario,
+            Nombre = usuario.Nombre,
+            Rol = usuario.Rol
         };
+
+        return new AuthenticationResult(resumen, token, expiraEn);
     }
 
     private string GenerarToken(int id, string nombreUsuario, string nombre, string rol, DateTime expiraEn)

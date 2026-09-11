@@ -1,59 +1,67 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { login as loginRequest } from '../api/auth'
-import { TOKEN_KEY } from '../api/client'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import * as authApi from '../api/auth'
+import { ApiError } from '../api/client'
 import type { UsuarioResumen } from '../types/auth'
-
-const USER_KEY = 'nogal_usuario'
 
 interface AuthContextValue {
   usuario: UsuarioResumen | null
   cargando: boolean
   login: (nombreUsuario: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+/**
+ * Fuente de verdad de sesión: la cookie HttpOnly `nogal_auth` que
+ * gestiona el backend. En el frontend solo cacheamos los datos del
+ * usuario en estado — no hay tokens en localStorage.
+ *
+ * Al montar consultamos /api/auth/me para reconciliar: si el navegador
+ * tiene la cookie válida, obtenemos el usuario; si no (401), quedamos
+ * anónimos y RequireAuth mandará al login.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<UsuarioResumen | null>(null)
   const [cargando, setCargando] = useState(true)
 
-  // Al montar, recupera la sesión guardada (si el token ya expiró, el
-  // primer llamado a la API con auth:true fallará con 401 y RequireAuth
-  // mandará de vuelta al login).
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    const usuarioGuardado = localStorage.getItem(USER_KEY)
-
-    if (token && usuarioGuardado) {
+    let cancelado = false
+    ;(async () => {
       try {
-        setUsuario(JSON.parse(usuarioGuardado) as UsuarioResumen)
-      } catch {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(USER_KEY)
+        const me = await authApi.me()
+        if (!cancelado) setUsuario(me)
+      } catch (error) {
+        if (!cancelado && error instanceof ApiError && error.status === 401) {
+          setUsuario(null)
+        }
+        // Otros errores (red caída) los tratamos como anónimo también;
+        // el usuario podrá reintentar iniciando sesión.
+      } finally {
+        if (!cancelado) setCargando(false)
       }
+    })()
+    return () => {
+      cancelado = true
     }
+  }, [])
 
-    setCargando(false)
+  const login = useCallback(async (nombreUsuario: string, password: string) => {
+    const respuesta = await authApi.login(nombreUsuario, password)
+    setUsuario(respuesta.usuario)
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout()
+    } finally {
+      setUsuario(null)
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({
-      usuario,
-      cargando,
-      async login(nombreUsuario, password) {
-        const respuesta = await loginRequest(nombreUsuario, password)
-        localStorage.setItem(TOKEN_KEY, respuesta.token)
-        localStorage.setItem(USER_KEY, JSON.stringify(respuesta.usuario))
-        setUsuario(respuesta.usuario)
-      },
-      logout() {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(USER_KEY)
-        setUsuario(null)
-      }
-    }),
-    [usuario, cargando]
+    () => ({ usuario, cargando, login, logout }),
+    [usuario, cargando, login, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

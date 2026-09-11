@@ -1,5 +1,4 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5199/api'
-const TOKEN_KEY = 'nogal_token'
 
 export class ApiError extends Error {
   status: number
@@ -10,26 +9,20 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions extends RequestInit {
-  /** Si es true, agrega el header Authorization con el token guardado. */
-  auth?: boolean
-}
-
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = false, headers, ...rest } = options
+/**
+ * Cliente HTTP común. La sesión viaja en una cookie HttpOnly `nogal_auth`
+ * que el navegador adjunta automáticamente en cada request cuando
+ * `credentials: 'include'` está activo — el frontend no maneja tokens.
+ */
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const { headers, ...rest } = options
   const finalHeaders = new Headers(headers)
   finalHeaders.set('Content-Type', 'application/json')
 
-  if (auth) {
-    const token = localStorage.getItem(TOKEN_KEY)
-    if (token) {
-      finalHeaders.set('Authorization', `Bearer ${token}`)
-    }
-  }
-
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
-    headers: finalHeaders
+    headers: finalHeaders,
+    credentials: 'include'
   })
 
   if (!response.ok) {
@@ -54,19 +47,11 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
  * Variante para subir archivos: no fija Content-Type (el navegador
  * agrega el boundary correcto de multipart/form-data).
  */
-export async function apiUpload<T>(path: string, body: FormData, options: { auth?: boolean } = {}): Promise<T> {
-  const headers = new Headers()
-  if (options.auth) {
-    const token = localStorage.getItem(TOKEN_KEY)
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`)
-    }
-  }
-
+export async function apiUpload<T>(path: string, body: FormData): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     body,
-    headers
+    credentials: 'include'
   })
 
   if (!response.ok) {
@@ -87,4 +72,4 @@ export async function apiUpload<T>(path: string, body: FormData, options: { auth
   return (await response.json()) as T
 }
 
-export { TOKEN_KEY, API_URL }
+export { API_URL }

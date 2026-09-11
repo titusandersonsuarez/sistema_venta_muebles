@@ -39,17 +39,16 @@ export function listar(pagina = 1, tamano = 50, estado?: string) {
     tamano: String(tamano)
   })
   if (estado) params.set('estado', estado)
-  return apiFetch<PagedResult<OrderListItem>>(`/admin/orders?${params.toString()}`, { auth: true })
+  return apiFetch<PagedResult<OrderListItem>>(`/admin/orders?${params.toString()}`)
 }
 
 export function obtener(id: number) {
-  return apiFetch<Order>(`/admin/orders/${id}`, { auth: true })
+  return apiFetch<Order>(`/admin/orders/${id}`)
 }
 
 export function cambiarEstado(id: number, estado: string) {
   return apiFetch<Order>(`/admin/orders/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ estado }),
-    auth: true
+    body: JSON.stringify({ estado })
   })
 }

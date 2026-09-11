@@ -4,5 +4,5 @@ namespace NogalApi.Services;
 
 public interface IAuthService
 {
-    Task<LoginResponse?> LoginAsync(string nombreUsuario, string password);
+    Task<AuthenticationResult?> LoginAsync(string nombreUsuario, string password);
 }

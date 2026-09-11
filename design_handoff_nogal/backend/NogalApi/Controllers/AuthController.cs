@@ -10,11 +10,19 @@ namespace NogalApi.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    /// <summary>
+    /// Nombre de la cookie que transporta el JWT. HttpOnly para que
+    /// JavaScript no pueda leerla (mitiga XSS token theft).
+    /// </summary>
+    public const string AuthCookieName = "nogal_auth";
 
-    public AuthController(IAuthService authService)
+    private readonly IAuthService _authService;
+    private readonly IWebHostEnvironment _env;
+
+    public AuthController(IAuthService authService, IWebHostEnvironment env)
     {
         _authService = authService;
+        _env = env;
     }
 
     [HttpPost("login")]
@@ -33,30 +41,52 @@ public class AuthController : ControllerBase
             return Unauthorized(new { mensaje = "Usuario o contraseña incorrectos." });
         }
 
-        return Ok(resultado);
+        Response.Cookies.Append(AuthCookieName, resultado.Token, ConstruirCookieOptions(resultado.ExpiraEn));
+
+        return Ok(new LoginResponse
+        {
+            ExpiraEn = resultado.ExpiraEn,
+            Usuario = resultado.Usuario
+        });
     }
 
     [HttpGet("me")]
     [Authorize]
     public IActionResult Me()
     {
-        return Ok(new
+        // Devuelve la misma forma que LoginResponse.Usuario para que el
+        // frontend no tenga que reconciliar dos shapes distintos.
+        var idRaw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Ok(new UsuarioResumen
         {
-            id = User.FindFirstValue(ClaimTypes.NameIdentifier),
-            nombreUsuario = User.Identity?.Name,
-            nombre = User.FindFirstValue("nombre"),
-            rol = User.FindFirstValue(ClaimTypes.Role)
+            Id = int.TryParse(idRaw, out var id) ? id : 0,
+            NombreUsuario = User.Identity?.Name ?? string.Empty,
+            Nombre = User.FindFirstValue("nombre") ?? string.Empty,
+            Rol = User.FindFirstValue(ClaimTypes.Role) ?? string.Empty
         });
     }
 
     [HttpPost("logout")]
-    [Authorize]
+    [AllowAnonymous]
     public IActionResult Logout()
     {
-        // El JWT es sin estado: cerrar sesión es responsabilidad del cliente
-        // (borrar el token guardado). Este endpoint existe para que el front
-        // tenga un lugar donde, más adelante, se pueda invalidar el token
-        // (ej. lista negra) sin cambiar el contrato.
+        // Sin [Authorize]: si la cookie ya está expirada o corrupta el
+        // frontend igual necesita poder llamar aquí para limpiarla y no
+        // quedar en un bucle de 401.
+        Response.Cookies.Delete(AuthCookieName, ConstruirCookieOptions(null));
         return NoContent();
+    }
+
+    private CookieOptions ConstruirCookieOptions(DateTime? expiraEn)
+    {
+        return new CookieOptions
+        {
+            HttpOnly = true,
+            // En dev servimos HTTP puro; en prod debe estar detrás de HTTPS.
+            Secure = !_env.IsDevelopment(),
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            Expires = expiraEn
+        };
     }
 }

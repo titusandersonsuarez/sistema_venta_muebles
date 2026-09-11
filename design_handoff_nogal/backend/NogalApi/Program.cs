@@ -84,6 +84,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+
+        // El token viaja en una cookie HttpOnly `nogal_auth`. El header
+        // Authorization sigue funcionando por si Swagger o herramientas
+        // internas quieren usarlo, pero el frontend real solo usa cookie.
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Token) &&
+                    context.Request.Cookies.TryGetValue(NogalApi.Controllers.AuthController.AuthCookieName, out var cookieToken))
+                {
+                    context.Token = cookieToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -96,7 +112,10 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              // Necesario para que el navegador incluya la cookie `nogal_auth`
+              // en requests cross-origin del frontend Vite (5173 → 5199).
+              .AllowCredentials();
     });
 });
 
@@ -124,7 +143,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// En dev servimos HTTP puro; HttpsRedirection sin puerto HTTPS
+// configurado rompe POSTs (respuestas 307/503 impredecibles).
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseCors("Frontend");
 app.UseAuthentication();
