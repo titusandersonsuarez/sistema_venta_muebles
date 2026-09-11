@@ -17,6 +17,11 @@ export interface Product {
   descripcion?: string | null
   estado: string
   imagenUrl?: string | null
+  modelo3dUrl?: string | null
+  modeloUsdzUrl?: string | null
+  modelo3dEstado: string
+  modelo3dError?: string | null
+  modelo3dSolicitadoEn?: string | null
   activo: boolean
   fechaCreacion: string
   fechaActualizacion: string
@@ -36,6 +41,11 @@ export interface PublicProduct {
   descripcion?: string | null
   estado: string
   imagenUrl?: string | null
+  modelo3dUrl?: string | null
+  modeloUsdzUrl?: string | null
+  modelo3dEstado: string
+  modelo3dError?: string | null
+  modelo3dSolicitadoEn?: string | null
   imagenes: ProductImage[]
 }
 
@@ -57,6 +67,8 @@ export interface CreateProductPayload {
   descripcion?: string
   estado?: string
   imagenUrl?: string
+  modelo3dUrl?: string
+  modeloUsdzUrl?: string
 }
 
 export type UpdateProductPayload = CreateProductPayload

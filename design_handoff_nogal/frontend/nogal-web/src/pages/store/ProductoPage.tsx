@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import * as productsApi from '../../api/products'
 import { API_URL, ApiError } from '../../api/client'
 import type { PublicProduct } from '../../types/product'
+import { ArDialog } from '../../components/ArDialog'
 
 const monedaCOP = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -20,6 +21,7 @@ export function ProductoPage() {
   const [notFound, setNotFound] = useState(false)
   const [acabado, setAcabado] = useState(ACABADOS[0])
   const [agregado, setAgregado] = useState(false)
+  const [arAbierto, setArAbierto] = useState(false)
 
   useEffect(() => {
     let cancelado = false
@@ -240,7 +242,7 @@ export function ProductoPage() {
             <button
               className="btn btn-secondary"
               style={{ fontSize: 15, padding: '12px 22px' }}
-              onClick={() => alert('El módulo AR está en construcción.')}
+              onClick={() => setArAbierto(true)}
             >
               Ver en tu espacio
             </button>
@@ -342,6 +344,7 @@ export function ProductoPage() {
           </div>
         </section>
       )}
+      <ArDialog abierto={arAbierto} alCerrar={() => setArAbierto(false)} producto={producto.nombre} modelo3dUrl={producto.modelo3dUrl} modeloUsdzUrl={producto.modeloUsdzUrl} />
     </main>
   )
 }

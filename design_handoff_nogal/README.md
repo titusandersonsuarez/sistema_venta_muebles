@@ -64,7 +64,28 @@ El resumen del panel ya consume datos reales mediante `GET /api/admin/sales`.
 - La respuesta incluye totales de ventas, pedidos, unidades y ticket promedio; buckets temporales; mezcla por categoría; y los cinco productos más vendidos.
 - La pantalla `/admin` incluye atajos de rango, filtros, KPI, barras seleccionables, mezcla por categoría y ranking de productos.
 
-El siguiente módulo pendiente es Producción e inventario.
+### AR 3D implementado
+
+Cada producto puede guardar dos URLs opcionales:
+
+- `Modelo3dUrl`: modelo `.glb` o `.gltf` para el visor 3D y Android/WebXR.
+- `ModeloUsdzUrl`: modelo `.usdz` opcional para Quick Look en iPhone/iPad.
+
+El panel de Productos permite editar ambas URLs. La ficha pública abre un visor oficial `@google/model-viewer` con controles de cámara, rotación automática y AR mediante `webxr`, `scene-viewer` y `quick-look`. Si el producto no tiene modelo, muestra un estado informativo y no rompe la ficha.
+
+Los archivos 3D deben estar publicados en una URL accesible por el navegador, con CORS configurado para el frontend. La API solo guarda las URLs; no almacena modelos binarios en SQL Server. La migración `20260911183658_AddProduct3dModels` crea las columnas correspondientes.
+
+### Flujo de generación automática
+
+Al subir una imagen desde el panel, el producto queda en estado `Pendiente` y se encola un trabajo de generación. La API procesa el trabajo en segundo plano y conserva los estados `Sin modelo`, `Pendiente`, `Procesando`, `Disponible` o `Error`. Los trabajos pendientes se recuperan después de reiniciar la API.
+
+- `POST /api/admin/products/{id}/3d-generation` permite reintentar manualmente.
+- La imagen de referencia debe existir antes de solicitar la generación.
+- La generación real requiere conectar un proveedor image-to-3D externo mediante `Product3d`; no se fabrica un GLB falso a partir de una sola imagen.
+- `Product3d:Enabled` está desactivado por defecto. La cola, estados y contrato ya están preparados; el adaptador del proveedor debe recibir una API key y devolver las URLs finales GLB/USDZ.
+- La migración `AddProduct3dGenerationStatus` guarda el estado, el error y la fecha de solicitud.
+
+Producción e inventario, la home pública, contacto y el chat Nogalito ya están implementados.
 
 ### Comandos de verificación
 
@@ -224,10 +245,11 @@ En producción: filtros y rango de fechas en la URL (query params), datos del se
   - `GET /api/admin/sales?from=&to=&granularity=day|week|month` (rol `Admin`) → dashboard con `totales`, `buckets`, `categorias` y `masVendidos`
   - `GET /api/admin/orders` · `PATCH /api/admin/orders/{id}/status`
   - `GET /api/admin/production` · `GET /api/admin/inventory`
+  - `POST /api/admin/products/{id}/3d-generation` (rol `Admin`) → encola generación 3D para la imagen del producto
   - `POST /api/contact` · `POST /api/chat` (bot; empezar con reglas, luego IA)
   - `POST /api/auth/login` · `POST /api/auth/logout`
 - **Modelo de datos**: Product(Id, Slug, Nombre, Categoria, Material, PrecioCOP, Medidas, Peso, Armado, Descripcion, ImagenUrl, Activo), ProductImage, Order(Id, Codigo, Cliente, Ciudad, Total, Estado, CreatedAt), OrderItem, Review, ProductionOrder(Etapa, Producto, DiasEnEtapa), InventoryItem(Nombre, Stock, Estado), ContactMessage, User.
-- **Pendientes de producto**: pasarela de pago (Wompi/Mercado Pago/PayU), facturación electrónica DIAN, WhatsApp Business API, AR real (`<model-viewer>` con GLB por producto), envíos/cobertura por ciudad.
+- **Pendientes de producto**: pasarela de pago (Wompi/Mercado Pago/PayU), facturación electrónica DIAN, WhatsApp Business API, carga gestionada de modelos 3D a almacenamiento de objetos y envíos/cobertura por ciudad.
 
 ## Assets
 - Todas las imágenes del prototipo son **marcadores**; la nota en cada uno indica qué foto va allí (ej. "sofá liena — 3/4 en sala", "mapa · Puente Aranda, Bogotá").

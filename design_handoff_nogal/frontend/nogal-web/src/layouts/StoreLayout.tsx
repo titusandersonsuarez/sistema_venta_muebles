@@ -27,7 +27,7 @@ export function StoreLayout() {
         <nav style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
           <NavLink to="/" end>Inicio</NavLink>
           <NavLink to="/catalogo">Catálogo</NavLink>
-          <NavLink to="/fabrica">La fábrica</NavLink>
+          <a href="/#fabrica">La fábrica</a>
           <NavLink to="/admin">Admin</NavLink>
           <span style={{ width: 1, height: 18, background: 'var(--color-divider)' }} />
           <Link

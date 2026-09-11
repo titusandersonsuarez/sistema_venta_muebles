@@ -124,6 +124,9 @@ public class ProductService : IProductService
             Descripcion = Trim(dto.Descripcion),
             Estado = estado,
             ImagenUrl = Trim(dto.ImagenUrl),
+            Modelo3dUrl = Trim(dto.Modelo3dUrl),
+            ModeloUsdzUrl = Trim(dto.ModeloUsdzUrl),
+            Modelo3dEstado = string.IsNullOrWhiteSpace(dto.Modelo3dUrl) ? "Sin modelo" : "Disponible",
             Activo = true,
             FechaCreacion = DateTime.UtcNow,
             FechaActualizacion = DateTime.UtcNow
@@ -169,6 +172,10 @@ public class ProductService : IProductService
         {
             producto.ImagenUrl = Trim(dto.ImagenUrl);
         }
+        producto.Modelo3dUrl = Trim(dto.Modelo3dUrl);
+        producto.ModeloUsdzUrl = Trim(dto.ModeloUsdzUrl);
+        producto.Modelo3dEstado = string.IsNullOrWhiteSpace(producto.Modelo3dUrl) ? "Sin modelo" : "Disponible";
+        producto.Modelo3dError = null;
         producto.FechaActualizacion = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -216,6 +223,9 @@ public class ProductService : IProductService
         }
 
         producto.ImagenUrl = url;
+        producto.Modelo3dEstado = "Pendiente";
+        producto.Modelo3dError = null;
+        producto.Modelo3dSolicitadoEn = DateTime.UtcNow;
         producto.Imagenes.Add(new ProductImage
         {
             Url = url,
@@ -223,6 +233,29 @@ public class ProductService : IProductService
         });
         producto.FechaActualizacion = DateTime.UtcNow;
 
+        await _context.SaveChangesAsync();
+        return MapAdmin(producto);
+    }
+
+    public async Task<ProductDto?> SolicitarModelo3dAsync(int id)
+    {
+        var producto = await _context.Products
+            .Include(p => p.Imagenes)
+            .FirstOrDefaultAsync(p => p.Id == id);
+        if (producto is null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(producto.ImagenUrl))
+        {
+            throw new ProductValidationException("Sube primero una imagen de referencia del mueble.");
+        }
+
+        producto.Modelo3dEstado = "Pendiente";
+        producto.Modelo3dError = null;
+        producto.Modelo3dSolicitadoEn = DateTime.UtcNow;
+        producto.FechaActualizacion = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return MapAdmin(producto);
     }
@@ -327,6 +360,11 @@ public class ProductService : IProductService
         Descripcion = p.Descripcion,
         Estado = p.Estado,
         ImagenUrl = p.ImagenUrl,
+        Modelo3dUrl = p.Modelo3dUrl,
+        ModeloUsdzUrl = p.ModeloUsdzUrl,
+        Modelo3dEstado = p.Modelo3dEstado,
+        Modelo3dError = p.Modelo3dError,
+        Modelo3dSolicitadoEn = p.Modelo3dSolicitadoEn,
         Activo = p.Activo,
         FechaCreacion = p.FechaCreacion,
         FechaActualizacion = p.FechaActualizacion,
@@ -352,6 +390,11 @@ public class ProductService : IProductService
         Descripcion = p.Descripcion,
         Estado = p.Estado,
         ImagenUrl = p.ImagenUrl,
+        Modelo3dUrl = p.Modelo3dUrl,
+        ModeloUsdzUrl = p.ModeloUsdzUrl,
+        Modelo3dEstado = p.Modelo3dEstado,
+        Modelo3dError = p.Modelo3dError,
+        Modelo3dSolicitadoEn = p.Modelo3dSolicitadoEn,
         Imagenes = p.Imagenes.Select(i => new ProductImageDto
         {
             Id = i.Id,

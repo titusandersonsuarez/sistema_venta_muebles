@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NogalApi.Data;
 
@@ -11,9 +12,11 @@ using NogalApi.Data;
 namespace NogalApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260911184410_AddProduct3dGenerationStatus")]
+    partial class AddProduct3dGenerationStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,10 +275,8 @@ namespace NogalApi.Migrations
 
                     b.Property<string>("Modelo3dEstado")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasDefaultValue("Sin modelo");
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateTime?>("Modelo3dSolicitadoEn")
                         .HasColumnType("datetime2");

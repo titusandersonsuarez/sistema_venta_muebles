@@ -14,4 +14,5 @@ public interface IProductService
     Task<bool> EliminarAsync(int id);
     Task<ProductDto?> RestaurarAsync(int id);
     Task<ProductDto?> AsignarImagenUrlAsync(int id, string url);
+    Task<ProductDto?> SolicitarModelo3dAsync(int id);
 }

@@ -66,6 +66,10 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
 
 **Placeholders (funcionan visualmente pero sin lógica):** Producción, Home pública completa, contacto y chat "Nogalito".
 
+**AR 3D por producto:** implementado con `@google/model-viewer`; la ficha usa GLB/GLTF y USDZ opcional desde las URLs guardadas en cada producto.
+
+**Generación automática 3D:** al subir la imagen del producto, la API guarda el producto y encola un trabajo en segundo plano. Se persisten los estados `Sin modelo`, `Pendiente`, `Procesando`, `Disponible` y `Error`; los trabajos pendientes se reencolan al reiniciar. El proveedor image-to-3D sigue desactivado por defecto porque requiere una API key y un adaptador real que devuelva las URLs GLB/USDZ. No crear archivos 3D falsos localmente.
+
 ### Qué falta (roadmap ordenado)
 
 - [x] **0. Auth + scaffold del panel**
@@ -90,8 +94,24 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - Las fechas representan calendario de Bogotá, con `to` exclusivo y conversión a UTC. Los pedidos `Pago pendiente` se excluyen de ventas confirmadas.
   - Frontend: `types/sales.ts`, `api/sales.ts`, `pages/admin/ResumenPage.tsx` y estilos de dashboard en `styles.css`. Incluye rangos rápidos, filtros, cuatro KPI, barras seleccionables, mezcla por categoría y top 5.
   - Verificación real: `401` sin JWT, `400` con fecha inválida, `200` autenticado contra SQL Server con datos reales; `dotnet build` y `npm run build` pasan.
-- [ ] **5. Producción** — modelos `ProductionOrder` + `InventoryItem`. Tarjetas de 4 etapas (Corte, Armado, Tapicería, Acabado y empaque) + tabla "Materiales por reponer" con estado Crítico/Bajo/Normal.
-- [ ] **6. Home pública + contacto + chat "Nogalito"** — home con hero, tarjetas por espacio, más pedidos, servicios, reseñas y footer. Formulario `POST /api/contact`. Chat con `POST /api/chat` empezando por reglas (palabras clave) y dejando el contrato listo para enchufar Claude API con el catálogo real como contexto.
+- [x] **AR 3D por mueble** — CERRADO el 2026-09-11.
+  - Backend: `Product.Modelo3dUrl` y `Product.ModeloUsdzUrl`, incluidos en DTOs, mapeos de `ProductService` y migración `20260911183658_AddProduct3dModels`.
+  - Frontend: `@google/model-viewer`, `components/ArDialog.tsx`, declaración JSX `model-viewer`, URLs editables en `pages/admin/ProductosPage.tsx` y visor conectado en `pages/store/ProductoPage.tsx`.
+  - Android/WebXR usa el GLB/GLTF; iOS/iPadOS usa USDZ mediante Quick Look. Sin modelo se muestra un mensaje informativo.
+  - Verificación: backend y frontend compilan; la migración contiene las dos columnas opcionales `nvarchar(500)`.
+- [x] **Cola de generación 3D** — estructura implementada el 2026-09-11.
+  - Backend: `Options/Product3dOptions.cs`, `Services/{IProduct3dGenerationService,UnavailableProduct3dGenerationService,Product3dGenerationQueue}.cs` y `POST /api/admin/products/{id}/3d-generation`.
+  - Subir una imagen en `POST /api/admin/products/{id}/image` marca el producto como `Pendiente` y encola el trabajo automáticamente.
+  - La migración `AddProduct3dGenerationStatus` añade estado, error y fecha de solicitud.
+  - Próximo paso técnico: implementar el adaptador del proveedor elegido (Meshy, Tripo u otro) con sus credenciales en variables de entorno. Mientras tanto el estado termina en `Error` con un mensaje explícito de configuración faltante.
+- [x] **5. Producción** — CERRADO el 2026-09-11.
+  - Backend: `ProductionOrder`, `InventoryItem`, `ProductionService`, siembra inicial y migración `20260911181104_AddProductionAndInventory`.
+  - Endpoints protegidos: `GET /api/admin/production` y `GET /api/admin/inventory`.
+  - Frontend: `ProduccionPage` consume ambos endpoints y muestra las cuatro etapas, capacidad mensual y los materiales ordenados por prioridad.
+- [x] **6. Home pública + contacto + chat "Nogalito"** — CERRADO el 2026-09-11.
+  - Home con hero, categorías, productos reales, AR informativo, reseñas, servicios, contacto y footer.
+  - `POST /api/contact` persiste los mensajes de contacto; `POST /api/chat` mantiene sesión e historial y responde por reglas para envíos, pagos, garantía, armado, taller, cambios y personalización.
+  - Migración `20260911181956_AddCommunication` aplicada a SQL Server.
 
 ### Diagrama de base de datos
 
@@ -337,4 +357,3 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 - **`dotnet ef` global es 8.0.27 pero runtime es 9.0.4**: funciona (avisa por consola). Actualizar con `dotnet tool update --global dotnet-ef` cuando puedas.
 - **`app.UseHttpsRedirection()` con URLs solo HTTP**: emite warning "Failed to determine the https port" en cada arranque. No es crítico, se puede sacar en dev.
 - **Migración generada después de un build**: si arrancás con `--no-build` inmediatamente después, el DLL viejo no incluye la migración nueva y `MigrateAsync()` no la encuentra. Solución: `dotnet build` primero.
-

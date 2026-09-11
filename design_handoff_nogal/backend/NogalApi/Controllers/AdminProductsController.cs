@@ -14,16 +14,19 @@ public class AdminProductsController : ControllerBase
 {
     private readonly IProductService _productos;
     private readonly IProductImageStorage _almacenImagenes;
+    private readonly IProduct3dGenerationQueue _colaModelos3d;
     private readonly ImageStorageOptions _imageOptions;
 
     public AdminProductsController(
         IProductService productos,
         IProductImageStorage almacenImagenes,
-        IOptions<ImageStorageOptions> imageOptions)
+        IOptions<ImageStorageOptions> imageOptions,
+        IProduct3dGenerationQueue colaModelos3d)
     {
         _productos = productos;
         _almacenImagenes = almacenImagenes;
         _imageOptions = imageOptions.Value;
+        _colaModelos3d = colaModelos3d;
     }
 
     [HttpGet]
@@ -118,7 +121,27 @@ public class AdminProductsController : ControllerBase
         }
 
         var actualizado = await _productos.AsignarImagenUrlAsync(id, url);
+        if (actualizado is not null)
+        {
+            await _colaModelos3d.EnqueueAsync(id, cancellationToken);
+        }
         return actualizado is null ? NotFound() : Ok(actualizado);
+    }
+
+    [HttpPost("{id:int}/3d-generation")]
+    public async Task<IActionResult> GenerarModelo3d(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var producto = await _productos.SolicitarModelo3dAsync(id);
+            if (producto is null) return NotFound();
+            await _colaModelos3d.EnqueueAsync(id, cancellationToken);
+            return AcceptedAtAction(nameof(Obtener), new { id }, producto);
+        }
+        catch (ProductValidationException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
     }
 
 }

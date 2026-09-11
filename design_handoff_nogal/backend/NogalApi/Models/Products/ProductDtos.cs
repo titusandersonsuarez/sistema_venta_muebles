@@ -24,6 +24,11 @@ public class ProductDto
     public string? Descripcion { get; set; }
     public string Estado { get; set; } = "Disponible";
     public string? ImagenUrl { get; set; }
+    public string? Modelo3dUrl { get; set; }
+    public string? ModeloUsdzUrl { get; set; }
+    public string Modelo3dEstado { get; set; } = "Sin modelo";
+    public string? Modelo3dError { get; set; }
+    public DateTime? Modelo3dSolicitadoEn { get; set; }
     public bool Activo { get; set; }
     public DateTime FechaCreacion { get; set; }
     public DateTime FechaActualizacion { get; set; }
@@ -47,6 +52,11 @@ public class ProductPublicDto
     public string? Descripcion { get; set; }
     public string Estado { get; set; } = "Disponible";
     public string? ImagenUrl { get; set; }
+    public string? Modelo3dUrl { get; set; }
+    public string? ModeloUsdzUrl { get; set; }
+    public string Modelo3dEstado { get; set; } = "Sin modelo";
+    public string? Modelo3dError { get; set; }
+    public DateTime? Modelo3dSolicitadoEn { get; set; }
     public List<ProductImageDto> Imagenes { get; set; } = new();
 }
 
@@ -62,6 +72,8 @@ public class CreateProductDto
     public string? Descripcion { get; set; }
     public string? Estado { get; set; }
     public string? ImagenUrl { get; set; }
+    public string? Modelo3dUrl { get; set; }
+    public string? ModeloUsdzUrl { get; set; }
 }
 
 public class UpdateProductDto
@@ -76,6 +88,8 @@ public class UpdateProductDto
     public string? Descripcion { get; set; }
     public string? Estado { get; set; }
     public string? ImagenUrl { get; set; }
+    public string? Modelo3dUrl { get; set; }
+    public string? ModeloUsdzUrl { get; set; }
 }
 
 public class PagedResult<T>

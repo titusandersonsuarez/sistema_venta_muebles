@@ -16,6 +16,8 @@ interface BorradorNuevo {
   precioCOP: string
   medidas: string
   descripcion: string
+  modelo3dUrl: string
+  modeloUsdzUrl: string
   archivo: File | null
 }
 
@@ -26,6 +28,8 @@ const borradorVacio: BorradorNuevo = {
   precioCOP: '',
   medidas: '',
   descripcion: '',
+  modelo3dUrl: '',
+  modeloUsdzUrl: '',
   archivo: null
 }
 
@@ -103,7 +107,9 @@ export function ProductosPage() {
         material: nuevo.material,
         precioCOP: precio,
         medidas: nuevo.medidas.trim() || undefined,
-        descripcion: nuevo.descripcion.trim() || undefined
+        descripcion: nuevo.descripcion.trim() || undefined,
+        modelo3dUrl: nuevo.modelo3dUrl.trim() || undefined,
+        modeloUsdzUrl: nuevo.modeloUsdzUrl.trim() || undefined
       })
 
       let finalCreado = creado
@@ -148,6 +154,8 @@ export function ProductosPage() {
       (editado.descripcion ?? '') !== (p.descripcion ?? '') ||
       editado.estado !== p.estado ||
       (editado.medidas ?? '') !== (p.medidas ?? '')
+      || (editado.modelo3dUrl ?? '') !== (p.modelo3dUrl ?? '')
+      || (editado.modeloUsdzUrl ?? '') !== (p.modeloUsdzUrl ?? '')
     )
   }
 
@@ -162,7 +170,9 @@ export function ProductosPage() {
         precioCOP: Number(actual.precioCOP),
         medidas: actual.medidas ?? undefined,
         descripcion: actual.descripcion ?? undefined,
-        estado: actual.estado
+        estado: actual.estado,
+        modelo3dUrl: actual.modelo3dUrl ?? undefined,
+        modeloUsdzUrl: actual.modeloUsdzUrl ?? undefined
       })
       setProductos((prev) => prev.map((x) => (x.id === p.id ? actualizado : x)))
       setEdiciones((prev) => {
@@ -225,6 +235,19 @@ export function ProductosPage() {
       setErrorGeneral(mensajeDeError(err, 'No pudimos subir la imagen.'))
     } finally {
       evento.target.value = ''
+      setOcupadoId(null)
+    }
+  }
+
+  async function generarModelo3d(p: Product) {
+    setOcupadoId(p.id)
+    try {
+      const actualizado = await productsApi.generarModelo3d(p.id)
+      setProductos((prev) => prev.map((x) => (x.id === p.id ? actualizado : x)))
+      mostrarGuardado(`Generación 3D de "${p.nombre}" encolada.`)
+    } catch (err) {
+      setErrorGeneral(mensajeDeError(err, 'No pudimos iniciar la generación 3D.'))
+    } finally {
       setOcupadoId(null)
     }
   }
@@ -379,6 +402,31 @@ export function ProductosPage() {
           />
         </div>
 
+        <div className="field" style={{ gridColumn: '1 / -1' }}>
+          <label htmlFor="pn-modelo3d">Modelo 3D (URL .glb o .gltf)</label>
+          <input
+            id="pn-modelo3d"
+            className="input"
+            type="url"
+            value={nuevo.modelo3dUrl}
+            onChange={(e) => setNuevo({ ...nuevo, modelo3dUrl: e.target.value })}
+            placeholder="https://cdn.ejemplo.com/muebles/mesa.glb"
+          />
+          <span className="text-muted" style={{ fontSize: 11 }}>Se usará para el visor 3D y AR en la ficha pública.</span>
+        </div>
+
+        <div className="field" style={{ gridColumn: '1 / -1' }}>
+          <label htmlFor="pn-modelo-usdz">Modelo Apple AR (URL .usdz, opcional)</label>
+          <input
+            id="pn-modelo-usdz"
+            className="input"
+            type="url"
+            value={nuevo.modeloUsdzUrl}
+            onChange={(e) => setNuevo({ ...nuevo, modeloUsdzUrl: e.target.value })}
+            placeholder="https://cdn.ejemplo.com/muebles/mesa.usdz"
+          />
+        </div>
+
         <div
           style={{
             display: 'flex',
@@ -519,6 +567,39 @@ export function ProductosPage() {
                       onChange={(e) => editarCampo(p, 'descripcion', e.target.value)}
                       style={{ width: 300, minHeight: 72, fontSize: 13 }}
                     />
+                    <label className="field" style={{ display: 'block', marginTop: 'var(--space-2)' }}>
+                      <span>Modelo GLB/GLTF</span>
+                      <input
+                        className="input"
+                        type="url"
+                        value={editando.modelo3dUrl ?? ''}
+                        onChange={(e) => editarCampo(p, 'modelo3dUrl', e.target.value)}
+                        placeholder="URL del modelo 3D"
+                        style={{ width: 300, fontSize: 12 }}
+                      />
+                    </label>
+                    <label className="field" style={{ display: 'block', marginTop: 'var(--space-2)' }}>
+                      <span>Modelo USDZ</span>
+                      <input
+                        className="input"
+                        type="url"
+                        value={editando.modeloUsdzUrl ?? ''}
+                        onChange={(e) => editarCampo(p, 'modeloUsdzUrl', e.target.value)}
+                        placeholder="URL Apple AR (opcional)"
+                        style={{ width: 300, fontSize: 12 }}
+                      />
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', marginTop: 'var(--space-2)' }}>
+                      <span className={`tag ${editando.modelo3dEstado === 'Disponible' ? 'tag-accent' : editando.modelo3dEstado === 'Error' ? 'tag-outline' : 'tag-neutral'}`}>
+                        3D: {editando.modelo3dEstado}
+                      </span>
+                      {(editando.modelo3dEstado === 'Sin modelo' || editando.modelo3dEstado === 'Error') && (
+                        <button className="btn btn-ghost" type="button" onClick={() => generarModelo3d(p)} disabled={bloqueado || !p.imagenUrl} style={{ fontSize: 11 }}>
+                          Generar modelo 3D
+                        </button>
+                      )}
+                    </div>
+                    {editando.modelo3dError && <span className="text-muted" style={{ display: 'block', marginTop: 'var(--space-1)', fontSize: 11 }}>{editando.modelo3dError}</span>}
                   </td>
                   <td>
                     <select

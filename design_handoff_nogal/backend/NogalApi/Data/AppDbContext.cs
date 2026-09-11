@@ -15,6 +15,11 @@ public class AppDbContext : DbContext
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
+    public DbSet<InventoryItem> InventoryItems => Set<InventoryItem>();
+    public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
+    public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +46,10 @@ public class AppDbContext : DbContext
             entity.Property(p => p.Armado).HasMaxLength(120);
             entity.Property(p => p.Estado).HasMaxLength(30).IsRequired();
             entity.Property(p => p.ImagenUrl).HasMaxLength(500);
+            entity.Property(p => p.Modelo3dUrl).HasMaxLength(500);
+            entity.Property(p => p.ModeloUsdzUrl).HasMaxLength(500);
+            entity.Property(p => p.Modelo3dEstado).HasMaxLength(30).IsRequired().HasDefaultValue("Sin modelo");
+            entity.Property(p => p.Modelo3dError).HasMaxLength(1000);
 
             entity.HasMany(p => p.Imagenes)
                 .WithOne(i => i.Product)
@@ -82,6 +91,45 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductionOrder>(entity =>
+        {
+            entity.Property(o => o.Etapa).HasMaxLength(30).IsRequired();
+            entity.Property(o => o.DiasEnEtapa).HasPrecision(4, 1);
+
+            entity.HasOne(o => o.Product)
+                .WithMany()
+                .HasForeignKey(o => o.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<InventoryItem>(entity =>
+        {
+            entity.Property(i => i.Nombre).HasMaxLength(120).IsRequired();
+            entity.Property(i => i.Stock).HasMaxLength(40).IsRequired();
+            entity.Property(i => i.Estado).HasMaxLength(30).IsRequired();
+        });
+
+        modelBuilder.Entity<ContactMessage>(entity =>
+        {
+            entity.Property(m => m.Nombre).HasMaxLength(120).IsRequired();
+            entity.Property(m => m.Contacto).HasMaxLength(120).IsRequired();
+        });
+
+        modelBuilder.Entity<ChatSession>(entity =>
+        {
+            entity.HasIndex(s => s.SessionId).IsUnique();
+            entity.Property(s => s.SessionId).HasMaxLength(40).IsRequired();
+            entity.HasMany(s => s.Messages)
+                .WithOne(m => m.Session)
+                .HasForeignKey(m => m.ChatSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.Property(m => m.Origen).HasMaxLength(10).IsRequired();
         });
     }
 }

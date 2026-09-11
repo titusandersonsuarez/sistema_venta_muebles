@@ -53,6 +53,13 @@ export function subirImagen(id: number, archivo: File) {
   return apiUpload<Product>(`/admin/products/${id}/image`, form, { auth: true })
 }
 
+export function generarModelo3d(id: number) {
+  return apiFetch<Product>(`/admin/products/${id}/3d-generation`, {
+    method: 'POST',
+    auth: true
+  })
+}
+
 export function obtenerOpciones() {
   return apiFetch<CatalogOptions>('/catalog/options')
 }

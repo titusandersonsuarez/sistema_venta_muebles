@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<AdminSeedOptions>(builder.Configuration.GetSection(AdminSeedOptions.SectionName));
 builder.Services.Configure<ImageStorageOptions>(builder.Configuration.GetSection(ImageStorageOptions.SectionName));
+builder.Services.Configure<Product3dOptions>(builder.Configuration.GetSection(Product3dOptions.SectionName));
 
 // Add services to the container.
 builder.Services.AddOpenApi();
@@ -49,6 +50,12 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISalesService, SalesService>();
+builder.Services.AddScoped<IProductionService, ProductionService>();
+builder.Services.AddScoped<ICommunicationService, CommunicationService>();
+builder.Services.AddSingleton<Product3dGenerationQueue>();
+builder.Services.AddSingleton<IProduct3dGenerationQueue>(services => services.GetRequiredService<Product3dGenerationQueue>());
+builder.Services.AddHostedService(services => services.GetRequiredService<Product3dGenerationQueue>());
+builder.Services.AddScoped<IProduct3dGenerationService, UnavailableProduct3dGenerationService>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");
@@ -95,6 +102,7 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
     await DbSeeder.SeedAdminAsync(context, seedOptions);
     await OrderSeeder.SeedAsync(context);
+    await ProductionSeeder.SeedAsync(context);
 }
 
 // Configure the HTTP request pipeline.
