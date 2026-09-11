@@ -15,6 +15,7 @@ builder.Services.Configure<AdminSeedOptions>(builder.Configuration.GetSection(Ad
 builder.Services.Configure<ImageStorageOptions>(builder.Configuration.GetSection(ImageStorageOptions.SectionName));
 builder.Services.Configure<Product3dOptions>(builder.Configuration.GetSection(Product3dOptions.SectionName));
 builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.SectionName));
+builder.Services.Configure<WompiOptions>(builder.Configuration.GetSection(WompiOptions.SectionName));
 
 // Add services to the container.
 builder.Services.AddHttpClient();
@@ -62,6 +63,9 @@ builder.Services.Configure<Product3dOptions>(builder.Configuration.GetSection(Pr
 builder.Services.AddScoped<UnavailableProduct3dGenerationService>();
 builder.Services.AddScoped<MeshyProduct3dGenerationService>();
 builder.Services.AddScoped<IProduct3dGenerationService, Product3dGenerationDispatcher>();
+builder.Services.AddScoped<DemoPaymentService>();
+builder.Services.AddScoped<WompiPaymentService>();
+builder.Services.AddScoped<IPaymentService, PaymentServiceDispatcher>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");

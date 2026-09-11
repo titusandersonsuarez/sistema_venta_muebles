@@ -4,6 +4,7 @@ import * as productsApi from '../../api/products'
 import { API_URL, ApiError } from '../../api/client'
 import type { PublicProduct } from '../../types/product'
 import { ArDialog } from '../../components/ArDialog'
+import { useCart } from '../../cart/CartContext'
 
 const monedaCOP = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -61,6 +62,7 @@ export function ProductoPage() {
   const [variante, setVariante] = useState<VariantOption>(DEFAULT_ACABADOS[0])
   const [agregado, setAgregado] = useState(false)
   const [arAbierto, setArAbierto] = useState(false)
+  const { agregar } = useCart()
 
   useEffect(() => {
     let cancelado = false
@@ -373,7 +375,26 @@ export function ProductoPage() {
           <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)', flexWrap: 'wrap' }}>
             <button
               className="btn btn-primary"
-              onClick={() => setAgregado(true)}
+              onClick={() => {
+                agregar({
+                  productId: producto.id,
+                  slug: producto.slug,
+                  nombre: producto.nombre,
+                  imagenUrl: producto.imagenUrl,
+                  precioBase: producto.precioCOP,
+                  cantidad: 1,
+                  variante: variante.id
+                    ? {
+                        id: variante.id,
+                        nombre: variante.nombre,
+                        tipo: variante.tipo,
+                        codigoColorHex: variante.codigoColorHex,
+                        ajusteCOP: variante.precioAjusteCOP
+                      }
+                    : null
+                })
+                setAgregado(true)
+              }}
               style={{ fontSize: 15, padding: '12px 26px' }}
               disabled={producto.estado !== 'Disponible'}
             >

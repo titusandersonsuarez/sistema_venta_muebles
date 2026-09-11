@@ -39,7 +39,7 @@ public static class OrderSeeder
             return;
         }
 
-        var codigoService = new OrderService(context);
+        // El seeder no necesita el flujo de pago; usa el helper estático.
 
         for (var i = 0; i < Demo.Length; i++)
         {
@@ -49,7 +49,7 @@ public static class OrderSeeder
 
             var pedido = new Order
             {
-                Codigo = await codigoService.GenerarCodigoUnicoAsync(),
+                Codigo = await OrderService.GenerarCodigoUnicoAsync(context),
                 Cliente = cliente,
                 Ciudad = ciudad,
                 Estado = estado,

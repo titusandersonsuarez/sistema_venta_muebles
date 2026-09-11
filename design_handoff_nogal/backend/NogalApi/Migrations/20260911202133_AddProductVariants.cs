@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -23,9 +23,9 @@ namespace NogalApi.Migrations
                     CodigoColorHex = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     PrecioAjusteCOP = table.Column<decimal>(type: "decimal(12,2)", precision: 12, scale: 2, nullable: false),
                     FotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Stock = table.Column<int>(type: "int", nullable: false, defaultValue: 10),
-                    Activo = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    Orden = table.Column<int>(type: "int", nullable: false, defaultValue: 0)
+                    Stock = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false),
+                    Orden = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

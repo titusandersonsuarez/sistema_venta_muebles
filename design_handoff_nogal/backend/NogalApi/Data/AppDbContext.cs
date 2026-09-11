@@ -87,6 +87,10 @@ public class AppDbContext : DbContext
             entity.Property(o => o.Ciudad).HasMaxLength(80).IsRequired();
             entity.Property(o => o.Estado).HasMaxLength(30).IsRequired();
             entity.Property(o => o.Total).HasPrecision(12, 2);
+            entity.Property(o => o.EnvioCOP).HasPrecision(12, 2);
+            entity.Property(o => o.Contacto).HasMaxLength(120);
+            entity.Property(o => o.PagoProveedor).HasMaxLength(20);
+            entity.Property(o => o.PagoTransaccionId).HasMaxLength(80);
 
             entity.HasMany(o => o.Items)
                 .WithOne(i => i.Order)
@@ -99,6 +103,8 @@ public class AppDbContext : DbContext
             entity.Property(i => i.NombreProducto).HasMaxLength(200).IsRequired();
             entity.Property(i => i.PrecioUnitario).HasPrecision(12, 2);
             entity.Property(i => i.Subtotal).HasPrecision(12, 2);
+            entity.Property(i => i.VarianteNombre).HasMaxLength(100);
+            entity.Property(i => i.PrecioAjusteVariante).HasPrecision(12, 2);
 
             // RESTRICT en Product: no queremos borrar (físicamente) un producto
             // que aparece en pedidos históricos. Además, Products.Activo hace
@@ -107,6 +113,11 @@ public class AppDbContext : DbContext
             entity.HasOne(i => i.Product)
                 .WithMany()
                 .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(i => i.Variante)
+                .WithMany()
+                .HasForeignKey(i => i.ProductVariantId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

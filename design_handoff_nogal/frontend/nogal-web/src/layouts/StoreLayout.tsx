@@ -1,7 +1,9 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { NogalitoChat } from '../components/NogalitoChat'
+import { useCart } from '../cart/CartContext'
 
 export function StoreLayout() {
+  const { cantidad } = useCart()
   return (
     <div style={{ background: 'var(--color-bg)', color: 'var(--color-text)', minHeight: '100vh', position: 'relative' }}>
       <header
@@ -32,11 +34,11 @@ export function StoreLayout() {
           <NavLink to="/admin">Admin</NavLink>
           <span style={{ width: 1, height: 18, background: 'var(--color-divider)' }} />
           <Link
-            to="/catalogo"
+            to="/carrito"
             className="btn btn-secondary"
             style={{ fontSize: 13, textDecoration: 'none' }}
           >
-            Carrito · 0
+            Carrito · {cantidad}
           </Link>
         </nav>
       </header>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import * as productsApi from '../../api/products'
 import { API_URL } from '../../api/client'
 import type { CatalogOptions, PublicProduct } from '../../types/product'
@@ -23,9 +23,26 @@ export function CatalogoPage() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [categoria, setCategoria] = useState(TODOS)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [categoria, setCategoria] = useState(searchParams.get('categoria') ?? TODOS)
   const [material, setMaterial] = useState(TODOS)
   const [precioMax, setPrecioMax] = useState(PRECIO_MAX)
+
+  // Sincroniza el filtro con la URL para que enlaces como
+  // "/catalogo?categoria=Sofás" abran el catálogo pre-filtrado.
+  useEffect(() => {
+    if (categoria === TODOS) {
+      if (searchParams.has('categoria')) {
+        const next = new URLSearchParams(searchParams)
+        next.delete('categoria')
+        setSearchParams(next, { replace: true })
+      }
+    } else if (searchParams.get('categoria') !== categoria) {
+      const next = new URLSearchParams(searchParams)
+      next.set('categoria', categoria)
+      setSearchParams(next, { replace: true })
+    }
+  }, [categoria, searchParams, setSearchParams])
 
   useEffect(() => {
     let cancelado = false

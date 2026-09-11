@@ -1,6 +1,37 @@
 import { apiFetch } from './client'
-import type { Order, OrderListItem } from '../types/order'
+import type { CreateOrderInput, Order, OrderListItem, PagoIntencion } from '../types/order'
 import type { PagedResult } from '../types/product'
+
+export function crear(dto: CreateOrderInput) {
+  return apiFetch<Order>('/orders', {
+    method: 'POST',
+    body: JSON.stringify(dto)
+  })
+}
+
+export function obtenerPorCodigo(codigo: string) {
+  return apiFetch<Order>(`/orders/${encodeURIComponent(codigo)}`)
+}
+
+export function iniciarPago(codigo: string) {
+  return apiFetch<PagoIntencion>(`/orders/${encodeURIComponent(codigo)}/pago`, {
+    method: 'POST'
+  })
+}
+
+export function confirmarPagoDemo(codigo: string, aprobado: boolean) {
+  return apiFetch<Order>(`/orders/${encodeURIComponent(codigo)}/pago/demo`, {
+    method: 'POST',
+    body: JSON.stringify({ aprobado })
+  })
+}
+
+export function verificarPago(codigo: string, transactionId: string) {
+  const params = new URLSearchParams({ transactionId })
+  return apiFetch<Order>(`/orders/${encodeURIComponent(codigo)}/pago/verificar?${params}`, {
+    method: 'POST'
+  })
+}
 
 export function listar(pagina = 1, tamano = 50, estado?: string) {
   const params = new URLSearchParams({

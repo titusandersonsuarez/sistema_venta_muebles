@@ -10,12 +10,16 @@ public static class OrderCatalogo
     public const string EnTaller = "En taller";
     public const string Entregado = "Entregado";
     public const string PagoPendiente = "Pago pendiente";
+    public const string PagoConfirmado = "Pago confirmado";
+    public const string PagoRechazado = "Pago rechazado";
 
     public static readonly IReadOnlyList<string> Estados = new[]
     {
-        EnRuta,
+        PagoPendiente,
+        PagoConfirmado,
+        PagoRechazado,
         EnTaller,
-        Entregado,
-        PagoPendiente
+        EnRuta,
+        Entregado
     };
 }
