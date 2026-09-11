@@ -71,7 +71,14 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
 
 - [x] **0. Auth + scaffold del panel**
 - [x] **1. Productos (CRUD admin + endpoint público)**
-- [ ] **2. Catálogo público + ficha de producto** — usa `GET /api/products` ya existente. Falta la página `/catalogo` con filtros controlados por estado (categoría radios, precio máximo range, material radios) + la ficha `/producto/:slug` con galería, precio, control segmentado de acabado y tabla de medidas.
+- [x] **2. Catálogo público + ficha de producto** — CERRADO el 2026-09-11.
+  - `layouts/StoreLayout.tsx` — header sticky con nav (Inicio / Catálogo / La fábrica / Admin / Carrito · 0) que envuelve todas las rutas públicas.
+  - `pages/store/CatalogoPage.tsx` — breadcrumb + h1 + conteo dinámico + aside con radios categoría, range precio (150k–2.5M step 50k), radios material, botón "Limpiar filtros". Grid `auto-fill minmax(200px, 1fr)` con tarjetas `.plate` 4:3.4. Estado vacío con CTA. Los filtros son estado controlado y llaman `GET /api/products` en cada cambio.
+  - `pages/store/ProductoPage.tsx` — breadcrumb, dos columnas (galería `.plate` 4:3.2 + 3 miniaturas 1:1 / info kicker + h1 + precio 34px + descripción justificada). Segmentado de Acabado (Roble natural / Nogal oscuro / Lino crudo / Gris piedra) — solo UI local (la BD no tiene variantes de acabado por producto todavía). Tabla Medidas/Material/Peso/Armado/Garantía. Sección "Combina bien con" con 3 productos de otras categorías.
+  - `pages/store/HomePlaceholder.tsx` — reescrito con la sección hero del prototipo (kicker, h1 "Somos la fábrica...", CTA "Ver el catálogo", 3 cifras). Home completa (por espacio, más pedidos, servicios, reseñas, footer) queda para módulo #6.
+  - `App.tsx` — rutas `/`, `/catalogo`, `/producto/:slug` envueltas por `<StoreLayout />`. `/admin/*` sigue igual con `AdminLayout` + `RequireAuth`.
+  - `api/products.ts` — agregado `obtenerPorSlug(slug)`.
+  - Verificación real: catálogo sin filtros, filtro por categoría, por material+precioMax, filtro imposible (estado vacío OK), ficha por slug, 404 en slug inexistente, frontend sirviendo HTML. 7/7 pasan.
 - [ ] **3. Pedidos** — modelos `Order` + `OrderItem`, endpoints `GET /api/admin/orders` y `PATCH /api/admin/orders/{id}/status`. Tabla en el panel con estados En ruta / En taller / Entregado / Pago pendiente (tags con clases `.tag-outline`, `.tag-accent`, `.tag-neutral`).
 - [ ] **4. Resumen (dashboard)** — endpoint `GET /api/admin/sales?from=&to=&granularity=day|week|month` devolviendo buckets `{label, ventas, pedidos}`. En el front: 4 tarjetas KPI con sparklines, gráfica de barras interactiva (clic fija selección), anillo `conic-gradient` de mezcla por categoría, top 5 más vendidos con barra hairline.
 - [ ] **5. Producción** — modelos `ProductionOrder` + `InventoryItem`. Tarjetas de 4 etapas (Corte, Armado, Tapicería, Acabado y empaque) + tabla "Materiales por reponer" con estado Crítico/Bajo/Normal.

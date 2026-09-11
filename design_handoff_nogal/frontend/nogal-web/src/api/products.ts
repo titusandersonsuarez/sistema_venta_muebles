@@ -57,7 +57,11 @@ export function obtenerOpciones() {
   return apiFetch<CatalogOptions>('/catalog/options')
 }
 
-// Público (lo dejamos listo para el módulo #2 del roadmap).
+export function obtenerPorSlug(slug: string) {
+  return apiFetch<PublicProduct>(`/products/${encodeURIComponent(slug)}`)
+}
+
+// Listado público con filtros (módulo #2).
 export function listarPublico(params: {
   categoria?: string
   material?: string
