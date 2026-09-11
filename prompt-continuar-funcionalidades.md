@@ -37,7 +37,13 @@ Antes de escribir código, **lee `design_handoff_nogal/README.md` completo** (ah
 
 ### Próximo trabajo recomendado
 
-No rehacer módulos existentes. El siguiente paso es implementar el adaptador del proveedor 3D elegido, usando API key en variables de entorno, polling si el proveedor trabaja de forma asíncrona y devolución de URLs GLB/USDZ. Después conviene añadir pruebas de integración para el flujo `imagen → cola → modelo disponible/error`.
+No rehacer módulos existentes. Candidatos (elige uno y ciérralo punta a punta):
+
+1. **Webhook Wompi + HTTPS**: expone `POST /api/webhooks/wompi` con validación de firma `EventsSecret` para consistencia asíncrona (el cliente puede cerrar el navegador sin volver). Luego levantar el frontend en HTTPS público para poder activar `pub_prod_`.
+2. **Almacenamiento de objetos (Azure Blob / S3)**: hoy imágenes y `.glb` viven en `wwwroot/uploads/`. Cambiar `IProductImageStorage` a una implementación cloud, mantener la interfaz.
+3. **Cookie httpOnly para JWT**: hoy el token vive en `localStorage`. Migrar a cookie httpOnly con refresh + CSRF token para el panel.
+4. **Reviews reales**: el modelo `Reviews` está en el Mermaid pero no implementado. Endpoint público de lectura, admin para moderación.
+5. **Adaptador image-to-3D real**: Meshy ya tiene service scaffolded (`MeshyProduct3dGenerationService`), falta credencial + probar contra sandbox real.
 
 Trabaja un módulo a la vez, de punta a punta (migración → endpoint → pantalla), y no avances al siguiente hasta que el anterior compile y funcione contra la base de datos real. Si necesitas decidir algo de negocio que el README no defina (zonas de envío, métodos de pago, textos de marketing), pregúntame en vez de inventarlo.
 
@@ -47,7 +53,7 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
 
 ---
 
-## ESTADO ACTUAL (última actualización: 2026-09-11)
+## ESTADO ACTUAL (última actualización: 2026-09-11, sesión de tarde)
 
 > Esta sección se actualiza en cada sesión para que el próximo Claude (o tú) sepa exactamente qué corre, qué falta y en qué punto se dejó el trabajo. **No borrar; solo mantener al día.**
 
@@ -69,7 +75,7 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - Subida de foto multipart con guardado en disco (`wwwroot/uploads/products/`) — la BD solo guarda la URL relativa.
   - Endpoint público con filtros (`categoria`, `material`, `precioMax`, paginación) conectado a la UI del catálogo.
 
-**Módulos funcionales:** Productos, catálogo, ficha pública, pedidos, dashboard, producción, inventario, home pública, contacto y chat "Nogalito".
+**Módulos funcionales:** Productos, variantes de acabado, catálogo, ficha pública, pedidos, dashboard, producción, inventario, home pública real, contacto, chat "Nogalito", **carrito + checkout + pasarela de pago (Wompi demo/sandbox)**.
 
 **AR 3D por producto:** implementado con `@google/model-viewer`; la ficha usa GLB/GLTF y USDZ opcional desde las URLs guardadas en cada producto.
 
@@ -117,6 +123,36 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - Home con hero, categorías, productos reales, AR informativo, reseñas, servicios, contacto y footer.
   - `POST /api/contact` persiste los mensajes de contacto; `POST /api/chat` mantiene sesión e historial y responde por reglas para envíos, pagos, garantía, armado, taller, cambios y personalización.
   - Migración `20260911181956_AddCommunication` aplicada a SQL Server.
+- [x] **7. Variantes de acabado por producto** — CERRADO el 2026-09-11.
+  - Modelo `ProductVariant` con `ProductId`, `Sku`, `Nombre`, `Tipo` (Madera/Tela/…), `CodigoColorHex`, `PrecioAjusteCOP`, `FotoUrl`, `Stock`, `Activo`, `Orden`. Índice único `(ProductId, Sku)`, FK con `Cascade`.
+  - `DbSeeder.SeedProductVariantsAsync` siembra 4 acabados por producto (Roble natural, Nogal oscuro, Lino crudo +$80k, Gris piedra +$80k) al primer arranque.
+  - `ProductService` incluye variantes al mapear a DTO público. `ProductoPage.tsx` renderiza el segmentado real y actualiza el precio en vivo.
+  - Migración `20260911202133_AddProductVariants`.
+  - **Trampa resuelta**: la migración original `20260911190000_AddProductVariants` del commit `68ffafd` vino mal generada (Designer vacío + snapshot desactualizado). Se regeneró con `dotnet ef migrations remove` + `add`, quedando con timestamp `20260911202133`. Si vuelve a pasar, verificar el snapshot antes de intentar `database update`.
+- [x] **8. Carrito + Checkout + Variantes en pedido** — CERRADO el 2026-09-11.
+  - Backend: `Order.Contacto`, `Order.EnvioCOP`, `OrderItem.ProductVariantId/VarianteNombre/PrecioAjusteVariante` (denormalizados como `NombreProducto`). `OrderService.CrearAsync` recalcula precios y totales server-side, valida producto activo y variante asociada, aplica envío gratis desde $500.000 (si no, $30.000). `POST /api/orders` público (sin auth) crea el pedido en estado `Pago pendiente`. `GET /api/orders/{codigo}` público para consultar.
+  - Frontend: `cart/CartContext.tsx` con `localStorage` (clave `nogal_carrito`), `layouts/StoreLayout.tsx` con contador reactivo, `ProductoPage.tsx` conectada al context (incluye variante seleccionada), `pages/store/CarritoPage.tsx` (lista + qty stepper + form cliente + resumen), `pages/store/GraciasPage.tsx` (confirmación con copy dinámico según estado).
+  - Migración `20260911204927_AddOrderContactShippingAndVariants`.
+  - Regla de negocio: **envío gratis desde $500.000; $30.000 debajo**. Coincide con lo que dice la home y el chat Nogalito.
+- [x] **9. Home pública real (reemplaza `HomePlaceholder`)** — CERRADO el 2026-09-11.
+  - `pages/store/HomePage.tsx` (nuevo, sustituye `HomePlaceholder.tsx`) con las 8 secciones del prototipo: hero (kicker + h1 + lead + 2 botones + 3 cifras), "Por espacio" (links a `/catalogo?categoria=X`), "Los más pedidos" (4 productos reales), banner AR (dispara `<ArDialog />`), "Lo que cuenta la gente" (3 testimonios), 4 servicios con copy completo, contacto (`POST /api/contact`) + info del taller (Cra. 56 #17-40, WhatsApp 300 000 0000), footer 4 columnas.
+  - `pages/store/CatalogoPage.tsx` ahora lee y sincroniza `?categoria=X` en la URL para permitir enlaces desde la Home.
+  - Estilos: usa las clases `.home-*` ya presentes en `styles.css` (no se agregó CSS nuevo).
+- [x] **10. Pasarela de pago Wompi (demo + scaffold real)** — CERRADO el 2026-09-11.
+  - Backend:
+    - `Options/WompiOptions.cs` con `Provider: "demo" | "wompi"`, `PublicKey`, `IntegritySecret`, `EventsSecret`, `CheckoutBaseUrl`, `ApiBaseUrl` (sandbox), `RedirectBaseUrl`, `DemoCheckoutBaseUrl`.
+    - `Services/IPaymentService.cs`, `DemoPaymentService`, `WompiPaymentService` (Redirection API con firma SHA256 `sha256(reference + amountInCents + currency + integritySecret)` + consulta de estado por `GET /transactions/{id}`), `PaymentServiceDispatcher` (fallback a demo si faltan credenciales).
+    - `Order` gana `PagoProveedor`, `PagoTransaccionId`, `PagoActualizadoEn`. `OrderCatalogo` gana estados `PagoConfirmado`, `PagoRechazado`.
+    - Endpoints públicos: `POST /api/orders/{codigo}/pago` (devuelve `checkoutUrl`), `POST /api/orders/{codigo}/pago/demo` (callback de la pantalla simulada), `POST /api/orders/{codigo}/pago/verificar?transactionId=X` (llamada al volver de Wompi real).
+    - Helper estático `OrderService.GenerarCodigoUnicoAsync(context)` extraído para que el seeder no arrastre las dependencias del payment service.
+    - Migración `20260911211111_AddOrderPaymentTracking`.
+  - Frontend:
+    - `pages/store/CarritoPage.tsx` — botón "Ir a pagar" que encadena `crear()` → `iniciarPago()` → `window.location.href = checkoutUrl`.
+    - `pages/store/PagoDemoPage.tsx` (nuevo) — pantalla simulación con "Aprobar / Rechazar" cuando Provider = "demo".
+    - `pages/store/GraciasPage.tsx` — lee `?id=` del callback de Wompi y llama `verificarPago`; título/copy/tag dinámicos según estado; botón "Reintentar el pago" si fue rechazado.
+    - Ruta nueva: `/carrito/pago-demo/:codigo`.
+  - Modo demo probado end-to-end (aprobar y rechazar). Modo Wompi real listo; requiere `PublicKey` + `IntegritySecret` y cambiar `Provider` a `"wompi"` en `appsettings.json`.
+  - **Pendiente para producción**: endpoint `POST /api/webhooks/wompi` con validación de firma `EventsSecret` (para casos donde el cliente cierre el navegador sin volver) + HTTPS público (Wompi rechaza redirect a `http://` en prod).
 
 ### Diagrama de base de datos
 
@@ -288,6 +324,9 @@ Migraciones aplicadas:
 - `20260911183658_AddProduct3dModels` — URLs GLB/GLTF y USDZ.
 - `20260911184410_AddProduct3dGenerationStatus` — estado, error y fecha de generación 3D.
 - `20260911184558_NormalizeProduct3dState` — normaliza productos existentes a `Sin modelo`.
+- `20260911202133_AddProductVariants` — tabla `ProductVariants` (regeneración del commit `68ffafd` que vino con Designer vacío).
+- `20260911204927_AddOrderContactShippingAndVariants` — `Order.Contacto`, `Order.EnvioCOP`, columnas de variante en `OrderItem`, FK opcional a `ProductVariant` con `Restrict`.
+- `20260911211111_AddOrderPaymentTracking` — `Order.PagoProveedor`, `Order.PagoTransaccionId`, `Order.PagoActualizadoEn`.
 
 Docker Postgres del `docker-compose.yml` original **no se usa** (Docker Desktop apagado + puerto 5432 ya ocupado por Postgres locales del usuario). El compose queda como referencia histórica.
 
@@ -345,6 +384,11 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 | GET | `/api/admin/inventory` | Bearer, rol Admin | Materiales e inventario |
 | POST | `/api/contact` | público | Guardar mensaje de contacto |
 | POST | `/api/chat` | público | Responder y persistir conversación de Nogalito |
+| POST | `/api/orders` | público | Crear pedido desde el carrito (recalcula precios y envío server-side) |
+| GET | `/api/orders/{codigo}` | público | Consultar pedido por código NGL-XXXXXX |
+| POST | `/api/orders/{codigo}/pago` | público | Iniciar intención de pago; devuelve `checkoutUrl` de Wompi o pantalla demo |
+| POST | `/api/orders/{codigo}/pago/demo` | público | Callback de la pantalla simulada (body `{aprobado:bool}`) — solo si Provider = "demo" |
+| POST | `/api/orders/{codigo}/pago/verificar?transactionId=X` | público | Verificar el pago real contra Wompi al volver del checkout |
 | GET | `/uploads/products/{archivo}` | público | Servido por `UseStaticFiles` |
 
 ### Decisiones tomadas en esta sesión
@@ -355,8 +399,11 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 - **Slug**: autogenerado del nombre (minúsculas + sin acentos + guiones), con sufijo `-2`, `-3`… en colisiones. Único en BD.
 - **Soft delete**: `Product.Activo = false`. Público filtra por Activo; admin puede listar inactivos con `?incluirInactivos=true`.
 - **Guardar en tabla del panel**: patrón borrador → botón "Guardar" explícito por fila (aparece cuando hay cambios). NO autosave onBlur.
-- **Dashboard**: `SalesService` excluye `Pago pendiente`; no cambiar esta regla sin actualizar la documentación y las pruebas.
+- **Dashboard**: `SalesService` excluye `Pago pendiente`; no cambiar esta regla sin actualizar la documentación y las pruebas. `Pago rechazado` también debería excluirse cuando se sume esa fuente al SalesService (no hecho aún — la exclusión sigue siendo únicamente por `Pago pendiente`).
 - **Generación 3D**: `Product3d:Enabled` está en `false` por defecto. La cola deja el producto en `Error` si no existe proveedor configurado; no crear GLB falsos.
+- **Envío**: gratis desde $500.000; $30.000 debajo del umbral. La regla vive en `OrderService.CrearAsync` y se muestra en `CarritoPage`. Si se cambia el umbral, hay que actualizar también el texto de la home (`ENVIO_DESDE`) y el fallback del chat Nogalito.
+- **Pasarela de pago**: `Wompi:Provider = "demo"` por defecto (mismo patrón que `Product3d.Provider`). El dispatcher hace fallback automático a demo si Provider = "wompi" pero faltan credenciales, con warning en logs. El precio de la transacción se recalcula server-side; nunca se confía en el amount que reporta el cliente.
+- **Carrito**: persistido en `localStorage` bajo la clave `nogal_carrito`. Al confirmar pago exitoso se vacía. La clave de deduplicación de items es `productId::variantId` — el mismo producto con distinta variante son items separados.
 
 ### Convenciones vigentes (recordatorio)
 
@@ -377,3 +424,6 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 - **`dotnet ef` global es 8.0.27 pero runtime es 9.0.4**: funciona (avisa por consola). Actualizar con `dotnet tool update --global dotnet-ef` cuando puedas.
 - **`app.UseHttpsRedirection()` con URLs solo HTTP**: emite warning "Failed to determine the https port" en cada arranque. No es crítico, se puede sacar en dev.
 - **Migración generada después de un build**: si arrancás con `--no-build` inmediatamente después, el DLL viejo no incluye la migración nueva y `MigrateAsync()` no la encuentra. Solución: `dotnet build` primero.
+- **Migración con `Designer.cs` vacío**: si alguien commitea una migración hecha a mano donde el `Designer.cs` no contiene el modelo completo y el `AppDbContextModelSnapshot.cs` no se actualizó, `dotnet ef database update` falla con `PendingModelChangesWarning`. Solución: borrar los dos archivos de la migración rota, restaurar el snapshot al estado de la migración anterior aplicada, y regenerar con `dotnet ef migrations add`. Pasó con `20260911190000_AddProductVariants` del commit `68ffafd`.
+- **`dotnet ef migrations remove` no borra los archivos si el proceso .NET tiene el DLL abierto**: revierte el snapshot pero deja los archivos `.cs` de la migración removida. Cerrar el `dotnet run` en background antes de tocar migraciones.
+- **Wompi requiere HTTPS público en producción**: sandbox acepta `http://localhost:5173`, pero al pasar a `pub_prod_` el `redirect-url` con `http://` es rechazado. Necesario levantar el frontend detrás de HTTPS (ngrok, Cloudflare Tunnel, o dominio real con cert) antes de activar prod.
