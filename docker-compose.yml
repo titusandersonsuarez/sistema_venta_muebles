@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nogal-postgres
+    environment:
+      POSTGRES_DB: nogal
+      POSTGRES_USER: nogal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nogal}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nogal -d nogal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./design_handoff_nogal/backend/NogalApi
+      dockerfile: Dockerfile
+    container_name: nogal-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=nogal;Username=nogal;Password=${POSTGRES_PASSWORD:-nogal}"
+      # Sobrescribe la key demo del appsettings — necesaria en prod real.
+      Jwt__Key: ${JWT_KEY:-CAMBIA_ESTA_LLAVE_POR_UNA_DE_AL_MENOS_32_CARACTERES_LARGA}
+      Cors__AllowedOrigins__0: "http://localhost"
+      Cors__AllowedOrigins__1: "http://localhost:8080"
+      # El frontend nginx proxea todo, así que estos redirects deben apuntar al mismo host.
+      Wompi__RedirectBaseUrl: "http://localhost/carrito/gracias"
+      Wompi__DemoCheckoutBaseUrl: "http://localhost/carrito/pago-demo"
+    volumes:
+      - api_uploads:/app/wwwroot/uploads
+    ports:
+      - "5199:8080"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./design_handoff_nogal/frontend/nogal-web
+      dockerfile: Dockerfile
+      args:
+        # El build se hace con /api relativo — nginx del contenedor proxea al servicio api.
+        VITE_API_URL: /api
+    container_name: nogal-web
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: nogal_postgres_data
+  api_uploads:
+    name: nogal_api_uploads

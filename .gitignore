@@ -16,3 +16,6 @@ design_handoff_nogal/frontend/nogal-web/vite.config.d.ts
 
 # Uploads de usuarios (se recrean en runtime, no son código)
 design_handoff_nogal/backend/NogalApi/wwwroot/uploads/
+
+# Env vars locales para docker compose (.env.example es el template rastreado)
+.env

@@ -138,6 +138,26 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - `pages/store/HomePage.tsx` (nuevo, sustituye `HomePlaceholder.tsx`) con las 8 secciones del prototipo: hero (kicker + h1 + lead + 2 botones + 3 cifras), "Por espacio" (links a `/catalogo?categoria=X`), "Los más pedidos" (4 productos reales), banner AR (dispara `<ArDialog />`), "Lo que cuenta la gente" (3 testimonios), 4 servicios con copy completo, contacto (`POST /api/contact`) + info del taller (Cra. 56 #17-40, WhatsApp 300 000 0000), footer 4 columnas.
   - `pages/store/CatalogoPage.tsx` ahora lee y sincroniza `?categoria=X` en la URL para permitir enlaces desde la Home.
   - Estilos: usa las clases `.home-*` ya presentes en `styles.css` (no se agregó CSS nuevo).
+- [x] **13. Postgres reemplaza a SQL Server Express** — CERRADO el 2026-09-11.
+  - `NogalApi.csproj`: `Microsoft.EntityFrameworkCore.SqlServer` → `Npgsql.EntityFrameworkCore.PostgreSQL 9.0.4`.
+  - `Program.cs`: `UseSqlServer` → `UseNpgsql`.
+  - `appsettings.json`: nueva cadena `Host=localhost;Port=5432;Database=nogal;Username=nogal;Password=nogal`.
+  - Todas las migraciones SQL Server borradas (`20260911160600_InitialUsuarios` hasta `20260911211111_AddOrderPaymentTracking`). Nueva migración inicial `20260911215553_InitialPostgres` que refleja el modelo completo actual (usuarios, productos, variantes, imágenes, pedidos con contacto/envío/pago, producción, inventario, contacto, chat).
+  - Motivación: montar Docker y CI portables, sin dependencia del SQL Server del host Windows.
+- [x] **14. Docker (Dockerfiles backend + frontend + compose)** — CERRADO el 2026-09-11.
+  - `backend/NogalApi/Dockerfile`: multi-stage (`sdk` → `aspnet`), restore cacheado antes del código, usuario no-root `nogal:1001`, `ASPNETCORE_URLS=http://+:8080`.
+  - `frontend/nogal-web/Dockerfile`: multi-stage (`node:20-alpine` → `nginx:1.27-alpine`), acepta `--build-arg VITE_API_URL=/api` para que el bundle apunte al proxy.
+  - `frontend/nogal-web/nginx.conf`: SPA fallback (`try_files $uri $uri/ /index.html`), proxy `/api/` y `/uploads/` a `http://api:8080`.
+  - `docker-compose.yml` en la raíz: 3 servicios (`postgres`, `api`, `web`) con healthcheck en Postgres, volúmenes persistentes `nogal_postgres_data` y `nogal_api_uploads`. Env vars desde `.env` (template en `.env.example`).
+  - Puertos expuestos: 80 (frontend), 5199 (api directo), 5432 (postgres directo).
+  - Levanta con `docker compose up -d` desde la raíz. El primer arranque compila las imágenes (~2 min); subsiguientes usan cache.
+- [x] **15. CI en GitHub Actions** — CERRADO el 2026-09-11.
+  - `.github/workflows/ci.yml` con 3 jobs:
+    1. **backend**: setup .NET 9, `dotnet restore` + `dotnet build --configuration Release`.
+    2. **frontend**: setup Node 20 con cache npm, `npm ci` + `npx tsc --noEmit` + `npm run build`.
+    3. **docker**: (depende de los dos anteriores) buildx builds ambas imágenes con `docker/build-push-action@v5`, cache en GHA. No hace push a registry (opción "Build + typecheck + build de imágenes" del prompt).
+  - Corre en cada `push` y `pull_request` a `main`.
+  - No hay pruebas automatizadas todavía (no existen unit/integration tests en el repo). Cuando se agreguen, van como paso extra dentro de cada job.
 - [x] **12. Sesión con cookie HttpOnly (reemplaza JWT en localStorage)** — CERRADO el 2026-09-11.
   - Backend: `AuthController.Login` graba una cookie `nogal_auth` con `HttpOnly=true`, `SameSite=Lax`, `Path=/`, `Secure` solo en no-dev, `Expires` = expiración del JWT. `AuthController.Logout` (sin `[Authorize]` para no quedar en bucle 401) la borra. `Program.cs` enseña al `JwtBearer` a leer el token de la cookie vía `OnMessageReceived` cuando falta el header `Authorization`, y agrega `AllowCredentials()` al CORS. `AuthController.Me` devuelve la misma forma que `LoginResponse.Usuario` (id: int, no string).
   - Nuevo record `AuthenticationResult(Usuario, Token, ExpiraEn)` — el token vive ahí para que el controller lo grabe en la cookie, nunca sale al cliente. `LoginResponse` DTO ya no tiene `Token`.
@@ -318,44 +338,51 @@ PENDIENTE
 - Precios en `decimal(12,2)` (permite hasta $ 9.999.999.999,99 COP — suficiente).
 - Soft delete via `Activo bit`. Nada de eliminación física, para conservar historial de pedidos que apunten a productos "eliminados".
 
-### Cambio de motor de BD: Postgres → SQL Server
+### Base de datos: Postgres 16 (desde 2026-09-11 tarde)
 
-El prompt original y el README sugerían Postgres, pero el usuario ya tenía **SQL Server Express** corriendo local (`.\SQLEXPRESS`, puerto 1433) para `EntrevistaApi`. Reemplazamos el provider en esta sesión:
+Durante la Fase 1 usamos SQL Server Express local por conveniencia. Al montar Docker migramos a **Postgres 16** para que el stack sea 100% portable y funcione en CI:
 
-- `NogalApi.csproj`: `Npgsql.EntityFrameworkCore.PostgreSQL` → `Microsoft.EntityFrameworkCore.SqlServer 9.0.4`.
-- `Program.cs`: `UseNpgsql` → `UseSqlServer`.
-- `appsettings.json`: `Server=.\SQLEXPRESS;Database=NogalDb;Trusted_Connection=True;TrustServerCertificate=True;`.
-- BD `NogalDb` creada por `MigrateAsync()` al arrancar.
+- `NogalApi.csproj`: `Microsoft.EntityFrameworkCore.SqlServer` → `Npgsql.EntityFrameworkCore.PostgreSQL 9.0.4`.
+- `Program.cs`: `UseSqlServer` → `UseNpgsql`.
+- `appsettings.json`: `Host=localhost;Port=5432;Database=nogal;Username=nogal;Password=nogal`.
+- En Docker: servicio `postgres` (imagen `postgres:16-alpine`), volumen `nogal_postgres_data`, contraseña desde `.env` (`POSTGRES_PASSWORD`).
+- Todas las migraciones SQL Server borradas; se generó una nueva migración inicial `20260911215553_InitialPostgres` que refleja el modelo completo.
+- La BD SQL Server local `NogalDb` queda huérfana y se puede borrar.
 
-Migraciones aplicadas:
-- `20260911160600_InitialUsuarios` — tabla `Usuarios`.
-- `20260911162006_AddProducts` — tablas `Products`, `ProductImages`, índice único en `Slug`, cascade delete.
-- `20260911170850_AddOrders` — pedidos y líneas de pedido.
-- `20260911181104_AddProductionAndInventory` — producción e inventario.
-- `20260911181956_AddCommunication` — contacto y chat.
-- `20260911183658_AddProduct3dModels` — URLs GLB/GLTF y USDZ.
-- `20260911184410_AddProduct3dGenerationStatus` — estado, error y fecha de generación 3D.
-- `20260911184558_NormalizeProduct3dState` — normaliza productos existentes a `Sin modelo`.
-- `20260911202133_AddProductVariants` — tabla `ProductVariants` (regeneración del commit `68ffafd` que vino con Designer vacío).
-- `20260911204927_AddOrderContactShippingAndVariants` — `Order.Contacto`, `Order.EnvioCOP`, columnas de variante en `OrderItem`, FK opcional a `ProductVariant` con `Restrict`.
-- `20260911211111_AddOrderPaymentTracking` — `Order.PagoProveedor`, `Order.PagoTransaccionId`, `Order.PagoActualizadoEn`.
+Migraciones aplicadas (Postgres, desde el módulo #13):
+- `20260911215553_InitialPostgres` — migración inicial que refleja el modelo completo actual. Tablas: `Usuarios`, `Products`, `ProductImages`, `ProductVariants`, `Orders` (con `Contacto`, `EnvioCOP`, `PagoProveedor`, `PagoTransaccionId`, `PagoActualizadoEn`), `OrderItems` (con variantes), `ProductionOrders`, `InventoryItems`, `ContactMessages`, `ChatSessions`, `ChatMessages`.
+
+**Migraciones SQL Server obsoletas** (borradas en el módulo #13):
+- `20260911160600_InitialUsuarios` hasta `20260911211111_AddOrderPaymentTracking`. No sirven contra Postgres; el historial equivalente vive ahora en el único `InitialPostgres`.
 
 Docker Postgres del `docker-compose.yml` original **no se usa** (Docker Desktop apagado + puerto 5432 ya ocupado por Postgres locales del usuario). El compose queda como referencia histórica.
 
 ### Cómo arrancar
 
+**Opción 1 — Todo dockerizado (para probar prod-like):**
 ```powershell
+# En la raíz del repo (donde vive docker-compose.yml)
+cp .env.example .env  # ajusta POSTGRES_PASSWORD y JWT_KEY
+docker compose up -d
+# Frontend en http://localhost, API en http://localhost:5199, DB en localhost:5432
+```
+
+**Opción 2 — Dev local con hot reload (requiere Postgres levantado):**
+```powershell
+# Solo Postgres del compose:
+docker compose up -d postgres
+
 # Backend en http://localhost:5199
 cd design_handoff_nogal\backend\NogalApi
-$env:ASPNETCORE_URLS = "http://localhost:5199"
-dotnet run --no-launch-profile
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run --urls http://localhost:5199
 
 # Frontend en http://localhost:5173 (en otra terminal)
 cd design_handoff_nogal\frontend\nogal-web
 npm run dev
 ```
 
-Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:5199/swagger`.
+Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:5199/swagger` (solo cuando `ASPNETCORE_ENVIRONMENT=Development`).
 
 ### Detalle de lo implementado (para ubicarse rápido en el código)
 
