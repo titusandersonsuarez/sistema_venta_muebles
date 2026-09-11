@@ -1,3 +1,18 @@
 **/bin/
 **/obj/
 .vs/
+
+# Node / Vite
+**/node_modules/
+**/dist/
+**/*.tsbuildinfo
+
+# vite.config compilado (fuente es vite.config.ts)
+design_handoff_nogal/frontend/nogal-web/vite.config.js
+design_handoff_nogal/frontend/nogal-web/vite.config.d.ts
+
+# Claude Code local (permisos y config personal)
+.claude/
+
+# Uploads de usuarios (se recrean en runtime, no son código)
+design_handoff_nogal/backend/NogalApi/wwwroot/uploads/

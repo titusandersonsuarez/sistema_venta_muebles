@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta charset="utf-8">
+<title>Nogal — fábrica de muebles en Bogotá</title>
+<link rel="stylesheet" href="_ds/classical-7c01fad9-4e0d-4105-a740-e29696e32395/styles.css">
+<script src="_ds/classical-7c01fad9-4e0d-4105-a740-e29696e32395/_ds_bundle.js"></script>
+<style>
+  body { margin: 0; }
+  a:hover { color: var(--color-accent-600); }
+</style>
+</helmet>
+
+<div style="background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);min-height:100vh">
+
+  <header class="nav" style="position:sticky;top:0;z-index:20;background:var(--color-bg);flex-wrap:wrap;row-gap:var(--space-2);gap:var(--space-3);padding-left:max(var(--space-4),4vw);padding-right:max(var(--space-4),4vw)">
+    <a href="#" onClick="{{ irHome }}" class="nav-brand" style="text-decoration:none;letter-spacing:0.02em">Nogal</a>
+    <nav style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap">
+      <a href="#" onClick="{{ irHome }}">Inicio</a>
+      <a href="#" onClick="{{ irCatalogo }}">Catálogo</a>
+      <a href="#" onClick="{{ irHome }}">La fábrica</a>
+      <a href="#" onClick="{{ irAdmin }}">Admin</a>
+      <span style="width:1px;height:18px;background:var(--color-divider)"></span>
+      <button class="btn btn-secondary" onClick="{{ irCatalogo }}" style="font-size:13px">Carrito · {{ carrito }}</button>
+    </nav>
+  </header>
+
+  <sc-if value="{{ esHome }}" hint-placeholder-val="{{ true }}">
+    <main>
+      <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--space-8);align-items:center;padding:calc(var(--space-8)*1.6) max(var(--space-4),4vw)">
+        <div style="max-width:30em">
+          <p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin-bottom:var(--space-3)">Fábrica propia en Bogotá · Entrega en 5 días hábiles</p>
+          <h1 style="font-size:clamp(40px,5.4vw,64px);font-weight:400;line-height:1.05;margin-bottom:var(--space-4)">Somos la fábrica,<br>no el intermediario.</h1>
+          <p style="font-size:17px;line-height:1.7;max-width:34em;margin-bottom:var(--space-6)">Salas, comedores, alcobas y sillas hechos en nuestro taller de Puente Aranda y despachados directo a tu casa. Sin showroom en centro comercial, sin distribuidor: por eso el precio es el que es.</p>
+          <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+            <button class="btn btn-primary" onClick="{{ irCatalogo }}" style="font-size:15px;padding:12px 22px">Ver el catálogo</button>
+            <button class="btn btn-secondary" onClick="{{ abrirAR }}" style="font-size:15px;padding:12px 22px">Verlo en tu casa</button>
+          </div>
+          <div style="display:flex;gap:var(--space-6);margin-top:var(--space-8);flex-wrap:wrap">
+            <div><div style="font-family:var(--font-heading);font-size:26px;font-variant-numeric:tabular-nums">4,8/5</div><div class="text-muted" style="font-size:12px">2.140 reseñas</div></div>
+            <div><div style="font-family:var(--font-heading);font-size:26px;font-variant-numeric:tabular-nums">10 años</div><div class="text-muted" style="font-size:12px">de garantía de fábrica</div></div>
+            <div><div style="font-family:var(--font-heading);font-size:26px;font-variant-numeric:tabular-nums">Gratis</div><div class="text-muted" style="font-size:12px">envío desde {{ envioDesdeFmt }}</div></div>
+          </div>
+        </div>
+        <figure class="plate" style="aspect-ratio:4/3.2;background:repeating-linear-gradient(135deg,#eae9e9 0 12px,#e1dedb 12px 24px);display:grid;place-items:center;border-radius:var(--radius-md)">
+          <figcaption style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:0.1em;color:#7d7979;margin:0">sala con sofá Liena — foto principal</figcaption>
+        </figure>
+      </section>
+
+      <section style="padding:0 max(var(--space-4),4vw)">
+        <hr class="hr">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-6)">
+          <h2 style="font-weight:400">Por espacio</h2>
+          <a href="#" onClick="{{ irCatalogo }}" style="font-size:13px">Ver las 4 categorías →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--space-4)">
+          <sc-for list="{{ categorias }}" as="c" hint-placeholder-count="4">
+            <a href="#" onClick="{{ c.abrir }}" style="text-decoration:none;color:inherit;display:block">
+              <div class="plate" style="aspect-ratio:3/3.4;background:repeating-linear-gradient(135deg,#eae9e9 0 10px,#e1dedb 10px 20px);display:grid;place-items:center;border-radius:var(--radius-md)">
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:0.08em;color:#7d7979">{{ c.foto }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:var(--space-2);gap:var(--space-2)">
+                <span style="font-family:var(--font-heading);font-size:19px">{{ c.nombre }}</span>
+                <span class="text-muted" style="font-size:12px;font-variant-numeric:tabular-nums">desde {{ c.desdeFmt }}</span>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding:0 max(var(--space-4),4vw);margin-top:calc(var(--space-8)*1.4)">
+        <hr class="hr">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-6)">
+          <h2 style="font-weight:400">Los más pedidos este mes</h2>
+          <a href="#" onClick="{{ irCatalogo }}" style="font-size:13px">Todo el catálogo →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--space-6)">
+          <sc-for list="{{ destacados }}" as="p" hint-placeholder-count="4">
+            <a href="#" onClick="{{ p.abrir }}" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:var(--space-2)">
+              <div class="plate" style="aspect-ratio:4/3.4;display:grid;place-items:center;border-radius:var(--radius-md);background:{{ p.fondo }}">
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:0.08em;color:#7d7979">{{ p.etiqueta }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;gap:var(--space-2);align-items:baseline">
+                <span style="font-family:var(--font-heading);font-size:18px">{{ p.nombre }}</span>
+                <span style="font-variant-numeric:tabular-nums;font-size:15px;white-space:nowrap">{{ p.precioFmt }}</span>
+              </div>
+              <div class="text-muted" style="font-size:12px">{{ p.estrellas }} · {{ p.nResenas }} reseñas · {{ p.entrega }}</div>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding:0 max(var(--space-4),4vw);margin-top:calc(var(--space-8)*1.6)">
+        <hr class="hr">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-8);align-items:center;padding:var(--space-6) 0">
+          <div>
+            <p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700)">Ver en tu espacio</p>
+            <h2 style="font-weight:400;font-size:34px;margin-top:var(--space-2)">Antes de comprar, ponlo en tu sala.</h2>
+            <p style="max-width:32em;text-align:justify">Apunta con el celular y el mueble aparece a tamaño real sobre tu piso. Revisas si cabe, si combina con la pared y si te convence — sin salir de casa ni pedir cita.</p>
+            <button class="btn btn-primary" onClick="{{ abrirAR }}" style="margin-top:var(--space-2)">Probar con la cámara</button>
+          </div>
+          <div class="plate" style="aspect-ratio:16/10;background:repeating-linear-gradient(135deg,#eae9e9 0 12px,#e1dedb 12px 24px);display:grid;place-items:center;border-radius:var(--radius-md)">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:0.08em;color:#7d7979">captura de AR en una sala real</span>
+          </div>
+        </div>
+      </section>
+
+      <section style="padding:0 max(var(--space-4),4vw);margin-top:var(--space-8)">
+        <hr class="hr">
+        <h2 style="font-weight:400;margin-bottom:var(--space-6)">Lo que cuenta la gente</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-6)">
+          <sc-for list="{{ testimonios }}" as="t" hint-placeholder-count="3">
+            <figure style="border-left:1px solid var(--color-accent);padding-left:var(--space-4)">
+              <div style="color:var(--color-accent-700);font-size:13px;letter-spacing:0.1em">{{ t.estrellas }}</div>
+              <blockquote style="margin:var(--space-2) 0;font-size:16px;line-height:1.7;font-style:italic">{{ t.texto }}</blockquote>
+              <figcaption style="font-size:12px">{{ t.autor }} · {{ t.producto }}</figcaption>
+            </figure>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding:0 max(var(--space-4),4vw);margin-top:calc(var(--space-8)*1.4)">
+        <hr class="hr">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-6);padding-bottom:var(--space-8)">
+          <div><h4 style="font-weight:400">Envío gratis</h4><p class="text-muted" style="font-size:13px;margin:0">En compras desde {{ envioDesdeFmt }}. Bogotá en 3 días, resto del país en 5 a 8 días hábiles.</p></div>
+          <div><h4 style="font-weight:400">Armado opcional</h4><p class="text-muted" style="font-size:13px;margin:0">Lo armamos en tu casa por $ 89.000 y nos llevamos el empaque.</p></div>
+          <div><h4 style="font-weight:400">30 días para pensarlo</h4><p class="text-muted" style="font-size:13px;margin:0">Si no encaja, lo recogemos gratis y te devolvemos la plata.</p></div>
+          <div><h4 style="font-weight:400">Paga a cuotas</h4><p class="text-muted" style="font-size:13px;margin:0">Hasta 12 cuotas con tarjeta, Addi o Sistecrédito.</p></div>
+        </div>
+      </section>
+
+      <section style="padding:0 max(var(--space-4),4vw) calc(var(--space-8)*1.5)">
+        <hr class="hr">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:var(--space-8);align-items:start">
+          <div>
+            <p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700)">Contáctanos</p>
+            <h2 style="font-weight:400;margin-top:var(--space-2)">Escríbenos y te cotizamos</h2>
+            <p class="text-muted" style="font-size:14px;max-width:30em">Cuéntanos qué mueble buscas o qué medidas tienes. Respondemos el mismo día hábil.</p>
+            <div style="display:flex;flex-direction:column;gap:var(--space-3);max-width:26em;margin-top:var(--space-4)">
+              <div class="field"><label for="n">Nombre</label><input class="input" id="n" placeholder="Tu nombre"></div>
+              <div class="field"><label for="w">Celular o correo</label><input class="input" id="w" placeholder="300 000 0000"></div>
+              <div class="field"><label for="m">Mensaje</label><textarea class="input" id="m" placeholder="Quiero una mesa de 180 cm en roble…"></textarea></div>
+              <button class="btn btn-primary" style="align-self:flex-start">Enviar mensaje</button>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700)">Dónde estamos</p>
+            <h2 style="font-weight:400;margin-top:var(--space-2)">Taller y punto de retiro</h2>
+            <div class="plate" style="aspect-ratio:16/10;background:repeating-linear-gradient(135deg,#eae9e9 0 12px,#e1dedb 12px 24px);display:grid;place-items:center;border-radius:var(--radius-md);margin-bottom:var(--space-4)">
+              <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:0.08em;color:#7d7979">mapa · Puente Aranda, Bogotá</span>
+            </div>
+            <table class="table">
+              <tbody>
+                <tr><td class="text-muted">Dirección</td><td>Cra. 56 #17-40, Puente Aranda, Bogotá</td></tr>
+                <tr><td class="text-muted">Horario</td><td>Lun a vie 8:00 a. m. – 5:00 p. m. · Sáb 8:00 a. m. – 12:00 m.</td></tr>
+                <tr><td class="text-muted">WhatsApp</td><td style="font-variant-numeric:tabular-nums">300 000 0000</td></tr>
+                <tr><td class="text-muted">Correo</td><td>hola@nogal.com.co</td></tr>
+              </tbody>
+            </table>
+            <p class="text-muted" style="font-size:12px;margin-top:var(--space-3)">Puedes venir a ver los muebles terminados antes del despacho; avísanos por WhatsApp para tenerlos listos.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ esCatalogo }}" hint-placeholder-val="{{ false }}">
+    <main style="padding:var(--space-8) max(var(--space-4),4vw) calc(var(--space-8)*1.5)">
+      <p class="text-muted" style="font-size:12px"><a href="#" onClick="{{ irHome }}">Inicio</a> / Catálogo</p>
+      <h1 style="font-weight:400;font-size:44px;margin-bottom:var(--space-2)">Catálogo</h1>
+      <p class="text-muted" style="font-size:14px;margin-bottom:var(--space-6)">{{ nResultados }} muebles fabricados en Bogotá, listos para despacho.</p>
+      <hr class="hr">
+
+      <div style="display:flex;flex-wrap:wrap;gap:var(--space-8);align-items:flex-start">
+        <aside style="flex:1 1 200px;max-width:240px;display:flex;flex-direction:column;gap:var(--space-6)">
+          <div>
+            <h6 style="margin-bottom:var(--space-3)">Categoría</h6>
+            <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+              <label class="radio"><input type="radio" name="cat" value="Todos" checked="{{ catTodos }}" onChange="{{ setCat }}"><span class="dot"></span>Todos</label>
+              <label class="radio"><input type="radio" name="cat" value="Sofás" checked="{{ catSofas }}" onChange="{{ setCat }}"><span class="dot"></span>Sofás</label>
+              <label class="radio"><input type="radio" name="cat" value="Sillas" checked="{{ catSillas }}" onChange="{{ setCat }}"><span class="dot"></span>Sillas</label>
+              <label class="radio"><input type="radio" name="cat" value="Mesas" checked="{{ catMesas }}" onChange="{{ setCat }}"><span class="dot"></span>Mesas</label>
+              <label class="radio"><input type="radio" name="cat" value="Camas" checked="{{ catCamas }}" onChange="{{ setCat }}"><span class="dot"></span>Camas</label>
+            </div>
+          </div>
+          <hr class="hr" style="margin:0">
+          <div>
+            <h6 style="margin-bottom:var(--space-3)">Precio máximo</h6>
+            <input class="input" type="range" min="150000" max="2500000" step="50000" value="{{ precioMax }}" onChange="{{ setPrecio }}" onInput="{{ setPrecio }}" style="padding:0;border:0;accent-color:var(--color-accent)">
+            <div style="display:flex;justify-content:space-between;font-size:12px;font-variant-numeric:tabular-nums;margin-top:4px;gap:var(--space-2)"><span class="text-muted">$ 150.000</span><span>hasta {{ precioMaxFmt }}</span></div>
+          </div>
+          <hr class="hr" style="margin:0">
+          <div>
+            <h6 style="margin-bottom:var(--space-3)">Material</h6>
+            <div style="display:flex;flex-direction:column;gap:var(--space-2)">
+              <label class="radio"><input type="radio" name="mat" value="Todos" checked="{{ matTodos }}" onChange="{{ setMat }}"><span class="dot"></span>Todos</label>
+              <label class="radio"><input type="radio" name="mat" value="Madera maciza" checked="{{ matMadera }}" onChange="{{ setMat }}"><span class="dot"></span>Madera maciza</label>
+              <label class="radio"><input type="radio" name="mat" value="Tapizado" checked="{{ matTapizado }}" onChange="{{ setMat }}"><span class="dot"></span>Tapizado</label>
+              <label class="radio"><input type="radio" name="mat" value="Metal y madera" checked="{{ matMetal }}" onChange="{{ setMat }}"><span class="dot"></span>Metal y madera</label>
+            </div>
+          </div>
+          <hr class="hr" style="margin:0">
+          <button class="btn btn-ghost" onClick="{{ limpiar }}" style="align-self:flex-start">Limpiar filtros</button>
+        </aside>
+
+        <div style="flex:100 1 260px;min-width:0">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-6)">
+            <sc-for list="{{ resultados }}" as="p" hint-placeholder-count="9">
+              <a href="#" onClick="{{ p.abrir }}" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:var(--space-2)">
+                <div class="plate" style="aspect-ratio:4/3.4;display:grid;place-items:center;border-radius:var(--radius-md);background:{{ p.fondo }}">
+                  <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:0.08em;color:#7d7979">{{ p.etiqueta }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;gap:var(--space-2);align-items:baseline">
+                  <span style="font-family:var(--font-heading);font-size:18px">{{ p.nombre }}</span>
+                  <span style="font-variant-numeric:tabular-nums;font-size:15px;white-space:nowrap">{{ p.precioFmt }}</span>
+                </div>
+                <div class="text-muted" style="font-size:12px">{{ p.material }} · {{ p.medidas }}</div>
+                <div style="font-size:12px;color:var(--color-accent-700)">{{ p.estrellas }} <span class="text-muted">{{ p.nResenas }} reseñas</span></div>
+              </a>
+            </sc-for>
+          </div>
+          <sc-if value="{{ sinResultados }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-8);text-align:center">
+              <h3 style="font-weight:400">Nada con esos filtros</h3>
+              <p class="text-muted" style="font-size:14px">Prueba a subir el precio máximo o a quitar el material.</p>
+              <button class="btn btn-primary" onClick="{{ limpiar }}">Limpiar filtros</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ esFicha }}" hint-placeholder-val="{{ false }}">
+    <main style="padding:var(--space-8) max(var(--space-4),4vw) calc(var(--space-8)*1.5)">
+      <p class="text-muted" style="font-size:12px;margin-bottom:var(--space-6)"><a href="#" onClick="{{ irHome }}">Inicio</a> / <a href="#" onClick="{{ irCatalogo }}">Catálogo</a> / {{ pNombre }}</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:calc(var(--space-8)*1.2);align-items:start">
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div class="plate" style="aspect-ratio:4/3.2;display:grid;place-items:center;border-radius:var(--radius-md);background:{{ pFondo }}">
+            <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:0.08em;color:#7d7979">{{ pFoto }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)">
+            <sc-for list="{{ miniaturas }}" as="m" hint-placeholder-count="3">
+              <div class="plate" style="aspect-ratio:1/1;background:repeating-linear-gradient(135deg,#eae9e9 0 8px,#e1dedb 8px 16px);display:grid;place-items:center;border-radius:var(--radius-md)">
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9px;letter-spacing:0.06em;color:#7d7979">{{ m }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="max-width:34em">
+          <p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700)">{{ pCat }} · hecho en nuestro taller</p>
+          <h1 style="font-weight:400;font-size:clamp(34px,4vw,48px);margin:var(--space-2) 0">{{ pNombre }}</h1>
+          <div style="display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap">
+            <span style="font-family:var(--font-heading);font-size:34px;font-variant-numeric:tabular-nums">{{ pPrecioFmt }}</span>
+            <span class="text-muted" style="font-size:13px">IVA incluido · o {{ pCuotaFmt }} al mes en 12 cuotas</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-2);font-size:13px">
+            <span style="color:var(--color-accent-700);letter-spacing:0.08em">{{ pEstrellas }}</span>
+            <span class="text-muted">{{ pRating }} de 5 · {{ pNResenas }} reseñas</span>
+          </div>
+          <p style="margin-top:var(--space-4);text-align:justify;line-height:1.75">{{ pDesc }}</p>
+
+          <hr class="hr">
+          <h6 style="margin-bottom:var(--space-3)">Acabado</h6>
+          <div class="seg" style="flex-wrap:wrap">
+            <label class="seg-opt"><input type="radio" name="acabado" value="Roble natural" checked="{{ acaRoble }}" onChange="{{ setAcabado }}">Roble natural</label>
+            <label class="seg-opt"><input type="radio" name="acabado" value="Nogal oscuro" checked="{{ acaNogal }}" onChange="{{ setAcabado }}">Nogal oscuro</label>
+            <label class="seg-opt"><input type="radio" name="acabado" value="Lino crudo" checked="{{ acaLino }}" onChange="{{ setAcabado }}">Lino crudo</label>
+            <label class="seg-opt"><input type="radio" name="acabado" value="Gris piedra" checked="{{ acaGris }}" onChange="{{ setAcabado }}">Gris piedra</label>
+          </div>
+
+          <div style="display:flex;gap:var(--space-3);margin-top:var(--space-6);flex-wrap:wrap">
+            <button class="btn btn-primary" onClick="{{ anadir }}" style="font-size:15px;padding:12px 26px">Agregar al carrito</button>
+            <button class="btn btn-secondary" onClick="{{ abrirAR }}" style="font-size:15px;padding:12px 22px">Ver en tu espacio</button>
+          </div>
+          <p class="text-muted" style="font-size:12px;margin-top:var(--space-3)">{{ pEntrega }} · Envío gratis desde {{ envioDesdeFmt }} · Devolución en 30 días</p>
+
+          <hr class="hr">
+          <h4 style="font-weight:400;margin-bottom:var(--space-2)">Medidas y materiales</h4>
+          <table class="table">
+            <tbody>
+              <tr><td class="text-muted">Medidas</td><td style="font-variant-numeric:tabular-nums">{{ pMedidas }}</td></tr>
+              <tr><td class="text-muted">Material</td><td>{{ pMaterial }}</td></tr>
+              <tr><td class="text-muted">Peso</td><td style="font-variant-numeric:tabular-nums">{{ pPeso }}</td></tr>
+              <tr><td class="text-muted">Armado</td><td>{{ pMontaje }}</td></tr>
+              <tr><td class="text-muted">Garantía</td><td>10 años de fábrica</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <section style="margin-top:calc(var(--space-8)*1.6)">
+        <hr class="hr">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-8)">
+          <div>
+            <h2 style="font-weight:400">Reseñas</h2>
+            <p class="text-muted" style="font-size:13px">{{ pRating }} de promedio sobre {{ pNResenas }} opiniones verificadas de compra.</p>
+            <button class="btn btn-secondary" style="margin-top:var(--space-2)">Escribir una reseña</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-6);grid-column:span 2;min-width:0">
+            <sc-for list="{{ resenas }}" as="r" hint-placeholder-count="3">
+              <figure style="border-top:1px solid var(--color-divider);padding-top:var(--space-3)">
+                <div style="display:flex;justify-content:space-between;gap:var(--space-3);font-size:12px">
+                  <span style="color:var(--color-accent-700);letter-spacing:0.08em">{{ r.estrellas }}</span>
+                  <span class="text-muted">{{ r.fecha }}</span>
+                </div>
+                <blockquote style="margin:var(--space-2) 0;font-size:15px;line-height:1.7">{{ r.texto }}</blockquote>
+                <figcaption style="font-size:12px">{{ r.autor }}</figcaption>
+              </figure>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-top:calc(var(--space-8)*1.6)">
+        <hr class="hr">
+        <h2 style="font-weight:400;margin-bottom:var(--space-6)">Combina bien con</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--space-6)">
+          <sc-for list="{{ relacionados }}" as="p" hint-placeholder-count="3">
+            <a href="#" onClick="{{ p.abrir }}" style="text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:var(--space-2)">
+              <div class="plate" style="aspect-ratio:4/3.4;display:grid;place-items:center;border-radius:var(--radius-md);background:{{ p.fondo }}">
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:0.08em;color:#7d7979">{{ p.etiqueta }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;gap:var(--space-2);align-items:baseline">
+                <span style="font-family:var(--font-heading);font-size:18px">{{ p.nombre }}</span>
+                <span style="font-variant-numeric:tabular-nums;font-size:15px;white-space:nowrap">{{ p.precioFmt }}</span>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ esLogin }}" hint-placeholder-val="{{ false }}">
+    <main style="display:grid;place-items:center;padding:calc(var(--space-8)*2) max(var(--space-4),4vw);min-height:60vh">
+      <form onSubmit="{{ entrar }}" style="width:min(380px,100%);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)">
+        <div>
+          <p style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-accent-700);margin:0">Acceso interno</p>
+          <h2 style="font-weight:400;margin:var(--space-2) 0 0">Panel de la fábrica</h2>
+          <p class="text-muted" style="font-size:13px;margin:var(--space-1) 0 0">Solo para el equipo de Nogal.</p>
+        </div>
+        <div class="field"><label for="u">Usuario</label><input class="input" id="u" value="{{ usuario }}" onInput="{{ setUsuario }}" placeholder="admin" autoComplete="username"></div>
+        <div class="field"><label for="c">Contraseña</label><input class="input" id="c" type="password" value="{{ clave }}" onInput="{{ setClave }}" placeholder="••••••••" autoComplete="current-password"></div>
+        <sc-if value="{{ hayError }}" hint-placeholder-val="{{ false }}">
+          <p style="font-size:12px;color:var(--color-accent-700);border-left:1px solid var(--color-accent);padding-left:var(--space-2);margin:0">{{ errorLogin }}</p>
+        </sc-if>
+        <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+        <p class="text-muted" style="font-size:11px;margin:0;text-align:center">Demo: admin / nogal2026</p>
+      </form>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ esAdmin }}" hint-placeholder-val="{{ false }}">
+    <main style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:0">
+      <aside style="flex:1 1 210px;max-width:236px;align-self:stretch;border-right:1px solid var(--color-divider);padding:var(--space-6) var(--space-4);display:flex;flex-direction:column;gap:var(--space-2);position:sticky;top:64px">
+        <div style="margin-bottom:var(--space-4)">
+          <div class="nav-brand" style="margin:0">Nogal</div>
+          <p class="text-muted" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin:0">Panel de fábrica</p>
+        </div>
+        <h6 style="margin-bottom:var(--space-1)">Módulos</h6>
+        <sc-for list="{{ secciones }}" as="m" hint-placeholder-count="4">
+          <button onClick="{{ m.ir }}" style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);width:100%;text-align:left;cursor:pointer;font-family:var(--font-heading);font-size:15px;color:var(--color-text);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);border:1px solid {{ m.borde }};background:{{ m.fondo }}">
+            <span>{{ m.nombre }}</span>
+            <span class="text-muted" style="font-size:11px;font-variant-numeric:tabular-nums">{{ m.cuenta }}</span>
+          </button>
+        </sc-for>
+        <hr class="hr" style="margin:var(--space-3) 0">
+        <div style="display:flex;flex-direction:column;gap:var(--space-2);align-items:flex-start">
+          <button class="btn btn-ghost" onClick="{{ irHome }}" style="font-size:13px">Ver la tienda</button>
+          <button class="btn btn-ghost" onClick="{{ salir }}" style="font-size:13px">Cerrar sesión</button>
+        </div>
+      </aside>
+
+      <div style="flex:100 1 340px;min-width:0;padding:var(--space-6) max(var(--space-4),3vw) calc(var(--space-8)*1.5)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);flex-wrap:wrap;padding-bottom:var(--space-4);border-bottom:1px solid var(--color-divider)">
+          <div>
+            <h1 style="font-weight:400;font-size:32px;margin:0">{{ secTitulo }}</h1>
+            <p class="text-muted" style="font-size:13px;margin:0">{{ secSub }}</p>
+          </div>
+          <div style="display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap">
+            <input class="input" placeholder="Buscar pedido, cliente o mueble…" style="width:min(280px,60vw)">
+            <button class="btn btn-secondary">Exportar CSV</button>
+            <div style="display:flex;align-items:center;gap:var(--space-2)">
+              <span style="width:34px;height:34px;border-radius:50%;border:1px solid var(--color-accent);display:grid;place-items:center;font-family:var(--font-heading);font-size:13px;color:var(--color-accent-700)">MB</span>
+              <div style="line-height:1.2"><div style="font-size:13px">María Bernal</div><div class="text-muted" style="font-size:11px">Gerencia</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="height:var(--space-6)"></div>
+
+      <sc-if value="{{ secResumen }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-4)">
+        <sc-for list="{{ atajos }}" as="a" hint-placeholder-count="4">
+          <button class="btn btn-secondary" onClick="{{ a.usar }}" style="font-size:12px;padding:6px 12px">{{ a.texto }}</button>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-4)">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-2)">
+              <div class="card-kicker">{{ k.titulo }}</div>
+              <span class="tag tag-outline" style="font-variant-numeric:tabular-nums">{{ k.delta }}</span>
+            </div>
+            <div style="font-family:var(--font-heading);font-size:30px;font-variant-numeric:tabular-nums;line-height:1.1">{{ k.valor }}</div>
+            <div style="display:flex;align-items:flex-end;gap:2px;height:28px">
+              <sc-for list="{{ k.spark }}" as="v" hint-placeholder-count="14">
+                <span style="flex:1;background:var(--color-accent-200);border-top:1px solid var(--color-accent);border-radius:1px;height:{{ v.alto }}%"></span>
+              </sc-for>
+            </div>
+            <div class="card-meta">{{ k.nota }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <section style="margin-top:calc(var(--space-8)*1.2)">
+        <hr class="hr">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-8);align-items:start">
+          <div style="min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-3)">
+              <h3 style="font-weight:400;margin:0">Ventas en el tiempo</h3>
+              <div style="display:flex;gap:var(--space-3);align-items:flex-end;flex-wrap:wrap">
+                <div class="field"><label for="d1">Desde</label><input class="input" id="d1" type="date" value="{{ desde }}" onChange="{{ setDesde }}" style="width:150px"></div>
+                <div class="field"><label for="d2">Hasta</label><input class="input" id="d2" type="date" value="{{ hasta }}" onChange="{{ setHasta }}" style="width:150px"></div>
+                <div class="seg">
+                  <label class="seg-opt"><input type="radio" name="gran" value="Día" checked="{{ granDia }}" onChange="{{ setGran }}">Día</label>
+                  <label class="seg-opt"><input type="radio" name="gran" value="Semana" checked="{{ granSemana }}" onChange="{{ setGran }}">Semana</label>
+                  <label class="seg-opt"><input type="radio" name="gran" value="Mes" checked="{{ granMes }}" onChange="{{ setGran }}">Mes</label>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:200px;border-bottom:1px solid var(--color-divider);padding-bottom:var(--space-1);overflow-x:auto">
+              <sc-for list="{{ barras }}" as="b" hint-placeholder-count="8">
+                <button onClick="{{ b.elegir }}" title="{{ b.titulo }}" style="flex:1 0 18px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%;background:transparent;border:0;padding:0;cursor:pointer;font:inherit">
+                  <span style="display:block;width:100%;border:1px solid var(--color-accent);border-bottom:0;border-radius:var(--radius-sm) var(--radius-sm) 0 0;height:{{ b.alto }}%;background:{{ b.fondo }}"></span>
+                  <span class="text-muted" style="font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ b.label }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ haySel }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);flex-wrap:wrap;border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);margin-top:var(--space-3)">
+                <div style="font-size:13px">
+                  <strong style="font-family:var(--font-heading);font-weight:400">{{ selLabel }}</strong>
+                  <span class="text-muted"> · {{ selDias }} · </span>
+                  <span style="font-variant-numeric:tabular-nums">{{ selVentas }}</span>
+                  <span class="text-muted"> · {{ selPedidos }} · ticket {{ selTicket }}</span>
+                </div>
+                <button class="btn btn-ghost" onClick="{{ limpiarSel }}" style="font-size:12px">Quitar selección</button>
+              </div>
+            </sc-if>
+            <p class="text-muted" style="font-size:12px;margin-top:var(--space-2)">Pasa el cursor por una barra para ver el detalle o haz clic para fijarlo.</p>
+          </div>
+
+          <div style="min-width:0;display:flex;flex-direction:column;gap:var(--space-6)">
+            <div>
+              <h3 style="font-weight:400;margin-bottom:var(--space-3)">Mezcla por categoría</h3>
+              <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap">
+                <div style="width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:{{ donut }}">
+                  <span style="width:82px;height:82px;border-radius:50%;background:var(--color-bg);display:grid;place-items:center;text-align:center;font-size:11px;line-height:1.3">
+                    <span><span class="text-muted">total</span><br><span style="font-family:var(--font-heading);font-size:13px;font-variant-numeric:tabular-nums">{{ donutTotal }}</span></span>
+                  </span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:150px">
+                  <sc-for list="{{ mezcla }}" as="m" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:var(--space-2);font-size:12px">
+                      <span style="width:10px;height:10px;border-radius:2px;flex:none;background:{{ m.color }}"></span>
+                      <span style="flex:1">{{ m.nombre }}</span>
+                      <span class="text-muted" style="font-variant-numeric:tabular-nums">{{ m.pctTexto }} · {{ m.valor }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div>
+            <h3 style="font-weight:400;margin-bottom:var(--space-3)">Más vendidos del periodo</h3>
+            <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+              <sc-for list="{{ topProductos }}" as="t" hint-placeholder-count="5">
+                <div>
+                  <div style="display:flex;justify-content:space-between;gap:var(--space-3);font-size:13px">
+                    <span>{{ t.nombre }}</span>
+                    <span style="font-variant-numeric:tabular-nums;white-space:nowrap">{{ t.unidades }} und · {{ t.totalFmt }}</span>
+                  </div>
+                  <div style="height:8px;border:1px solid var(--color-divider);border-radius:var(--radius-sm);margin-top:5px">
+                    <div style="height:100%;background:var(--color-accent-200);border-right:1px solid var(--color-accent);width:{{ t.pct }}%"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      </sc-if>
+
+      <sc-if value="{{ secProductos }}" hint-placeholder-val="{{ false }}">
+      <section>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-3)">
+          <div>
+            <h3 style="font-weight:400;margin:0">Productos, fotos y precios</h3>
+            <p class="text-muted" style="font-size:13px;margin:var(--space-1) 0 0">Sube la foto real de cada mueble y ajusta el precio: la tienda se actualiza de inmediato.</p>
+          </div>
+          <sc-if value="{{ hayGuardado }}" hint-placeholder-val="{{ false }}">
+            <span class="tag tag-accent">{{ guardado }}</span>
+          </sc-if>
+        </div>
+
+        <form onSubmit="{{ crear }}" style="border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-4);display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-3);align-items:end">
+          <div style="grid-column:1/-1"><h4 style="font-weight:400;margin:0">Subir un producto nuevo</h4></div>
+          <div class="field"><label for="fn">Nombre</label><input class="input" id="fn" value="{{ form.nombre }}" onChange="{{ setFNombre }}" onInput="{{ setFNombre }}" placeholder="Mesa auxiliar Sáchica"></div>
+          <div class="field"><label for="fc">Categoría</label>
+            <select class="input" id="fc" value="{{ form.cat }}" onChange="{{ setFCat }}">
+              <option>Sofás</option><option>Sillas</option><option>Mesas</option><option>Camas</option>
+            </select>
+          </div>
+          <div class="field"><label for="fm">Material</label>
+            <select class="input" id="fm" value="{{ form.material }}" onChange="{{ setFMaterial }}">
+              <option>Madera maciza</option><option>Tapizado</option><option>Metal y madera</option>
+            </select>
+          </div>
+          <div class="field"><label for="fp">Precio (COP)</label><input class="input" id="fp" type="number" step="10000" min="0" value="{{ form.precio }}" onChange="{{ setFPrecio }}" onInput="{{ setFPrecio }}" placeholder="490000"></div>
+          <div class="field"><label for="fmed">Medidas</label><input class="input" id="fmed" value="{{ form.medidas }}" onChange="{{ setFMedidas }}" onInput="{{ setFMedidas }}" placeholder="60 × 40 × 55 cm"></div>
+          <div class="field" style="grid-column:1/-1"><label for="fd">Descripción</label><textarea class="input" id="fd" value="{{ form.desc }}" onChange="{{ setFDesc }}" onInput="{{ setFDesc }}" placeholder="Para qué sirve, en qué madera va, qué trae incluido…"></textarea></div>
+          <div style="display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;grid-column:1/-1">
+            <label style="display:inline-flex;align-items:center;gap:var(--space-2);cursor:pointer">
+              <span class="btn btn-secondary" style="font-size:13px">Elegir foto</span>
+              <input type="file" accept="image/*" onChange="{{ setFFoto }}" style="display:none">
+              <span class="text-muted" style="font-size:12px">{{ formFoto }}</span>
+            </label>
+            <button class="btn btn-primary" type="submit">Publicar producto</button>
+          </div>
+        </form>
+
+        <div style="overflow-x:auto">
+          <table class="table">
+            <thead>
+              <tr><th>Foto</th><th>Mueble</th><th>Categoría</th><th>Precio (COP)</th><th>Descripción</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ gestion }}" as="g" hint-placeholder-count="12">
+                <tr>
+                  <td>
+                    <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer">
+                      <span class="plate" style="width:52px;height:40px;flex:none;border-radius:var(--radius-sm);display:block;background:{{ g.mini }}"></span>
+                      <span class="btn btn-secondary" style="font-size:12px;padding:5px 10px">Subir</span>
+                      <input type="file" accept="image/*" onChange="{{ g.subir }}" style="display:none">
+                    </label>
+                  </td>
+                  <td><input class="input" value="{{ g.nombre }}" onChange="{{ g.setNombre }}" onInput="{{ g.setNombre }}" style="width:190px"></td>
+                  <td class="text-muted">{{ g.cat }}</td>
+                  <td><input class="input" type="number" step="10000" min="0" value="{{ g.precio }}" onChange="{{ g.setPrecio }}" style="width:140px;font-variant-numeric:tabular-nums"></td>
+                  <td><textarea class="input" value="{{ g.desc }}" onChange="{{ g.setDesc }}" style="width:300px;min-height:72px;font-size:13px"></textarea></td>
+                  <td class="text-muted" style="font-size:12px;min-width:130px">{{ g.estadoFoto }} · {{ g.precioFmt }}</td>
+                  <td style="text-align:right;white-space:nowrap">
+                    <button class="btn btn-ghost" onClick="{{ g.quitar }}" style="font-size:12px">Restaurar</button>
+                    <button class="btn btn-ghost" onClick="{{ g.eliminar }}" style="font-size:12px">Eliminar</button>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <sc-if value="{{ hayEliminados }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3);border-top:1px solid var(--color-divider);padding-top:var(--space-3)">
+            <span class="text-muted" style="font-size:12px">Eliminados:</span>
+            <sc-for list="{{ eliminados }}" as="e" hint-placeholder-count="1">
+              <button class="tag tag-outline" onClick="{{ e.volver }}" style="cursor:pointer;background:transparent;font-family:var(--font-body)">{{ e.nombre }} · devolver</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ secPedidos }}" hint-placeholder-val="{{ false }}">
+      <section>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-3)">
+          <h3 style="font-weight:400;margin:0">Pedidos recientes</h3>
+          <a href="#" style="font-size:13px">Ver los {{ nPedidos }} pedidos →</a>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="table">
+            <thead>
+              <tr><th>Pedido</th><th>Cliente</th><th>Ciudad</th><th>Producto</th><th style="text-align:right">Valor</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ pedidos }}" as="o" hint-placeholder-count="8">
+                <tr>
+                  <td style="font-variant-numeric:tabular-nums;white-space:nowrap">{{ o.id }}</td>
+                  <td style="white-space:nowrap">{{ o.cliente }}</td>
+                  <td class="text-muted" style="white-space:nowrap">{{ o.ciudad }}</td>
+                  <td>{{ o.producto }}</td>
+                  <td style="font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap">{{ o.valorFmt }}</td>
+                  <td><span class="tag {{ o.tagClase }}">{{ o.estado }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      </sc-if>
+
+      <sc-if value="{{ secProduccion }}" hint-placeholder-val="{{ false }}">
+      <section>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-8);align-items:start">
+          <div>
+            <h3 style="font-weight:400;margin-bottom:var(--space-3)">En el taller ahora</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--space-3)">
+              <sc-for list="{{ etapas }}" as="e" hint-placeholder-count="4">
+                <div class="card">
+                  <div class="card-kicker">{{ e.nombre }}</div>
+                  <div style="font-family:var(--font-heading);font-size:24px;font-variant-numeric:tabular-nums">{{ e.ordenes }}</div>
+                  <div class="card-meta">órdenes · {{ e.dias }} días prom.</div>
+                </div>
+              </sc-for>
+            </div>
+            <p class="text-muted" style="font-size:12px;margin-top:var(--space-3)">Capacidad del mes: 180 unidades. Comprometido: 142.</p>
+          </div>
+          <div>
+            <h3 style="font-weight:400;margin-bottom:var(--space-3)">Materiales por reponer</h3>
+            <table class="table">
+              <tbody>
+                <sc-for list="{{ insumos }}" as="i" hint-placeholder-count="4">
+                  <tr>
+                    <td>{{ i.nombre }}</td>
+                    <td class="text-muted" style="font-variant-numeric:tabular-nums;white-space:nowrap">{{ i.stock }}</td>
+                    <td style="text-align:right"><span class="tag {{ i.tagClase }}">{{ i.estado }}</span></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      </sc-if>
+
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ esTienda }}" hint-placeholder-val="{{ true }}">
+    <footer style="border-top:1px solid var(--color-divider);padding:var(--space-8) max(var(--space-4),4vw);display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-6)">
+      <div>
+        <div class="nav-brand">Nogal</div>
+        <p class="text-muted" style="font-size:12px;max-width:22em">Fábrica de muebles en Puente Aranda, Bogotá. Vendemos directo de taller a casa, para que la plata se quede en la madera y no en la vitrina.</p>
+        <p class="text-muted" style="font-size:12px;margin:0">Cra. 56 #17-40 · WhatsApp 300 000 0000</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+        <h6>Comprar</h6><a href="#" onClick="{{ irCatalogo }}">Sofás</a><a href="#" onClick="{{ irCatalogo }}">Sillas</a><a href="#" onClick="{{ irCatalogo }}">Mesas</a><a href="#" onClick="{{ irCatalogo }}">Camas</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+        <h6>Ayuda</h6><a href="#">Envíos y armado</a><a href="#">Devoluciones</a><a href="#">Paga a cuotas</a><a href="#">Contacto</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+        <h6>Novedades</h6>
+        <p class="text-muted" style="font-size:12px;margin:0">Un correo al mes con lo nuevo del taller y las rebajas de verdad.</p>
+        <div style="display:flex;gap:var(--space-2)"><input class="input" placeholder="tucorreo@correo.com"><button class="btn btn-primary">Enviar</button></div>
+      </div>
+    </footer>
+  </sc-if>
+
+  <sc-if value="{{ esTienda }}" hint-placeholder-val="{{ true }}">
+    <div style="position:fixed;right:max(var(--space-4),3vw);bottom:max(var(--space-4),3vw);z-index:30;display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3);max-width:min(340px,calc(100vw - 2*var(--space-4)))">
+      <sc-if value="{{ chatAbierto }}" hint-placeholder-val="{{ false }}">
+        <div style="width:min(340px,calc(100vw - 2*var(--space-4)));background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);padding:var(--space-3);border-bottom:1px solid var(--color-divider)">
+            <div>
+              <div style="font-family:var(--font-heading);font-size:16px">Nogalito</div>
+              <div class="text-muted" style="font-size:11px">Asistente de la fábrica · en línea</div>
+            </div>
+            <button class="btn btn-ghost" onClick="{{ cerrarChat }}" style="font-size:13px">Cerrar</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);max-height:44vh;overflow-y:auto">
+            <sc-for list="{{ chat }}" as="m" hint-placeholder-count="1">
+              <div style="display:flex;justify-content:{{ m.just }}">
+                <div style="max-width:85%;font-size:13px;line-height:1.6;padding:8px 11px;border-radius:var(--radius-md);border:1px solid {{ m.borde }};background:{{ m.fondo }}">{{ m.texto }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 var(--space-3) var(--space-2)">
+            <sc-for list="{{ sugerencias }}" as="s" hint-placeholder-count="4">
+              <button class="tag tag-outline" onClick="{{ s.usar }}" style="cursor:pointer;background:transparent;font-family:var(--font-body)">{{ s.texto }}</button>
+            </sc-for>
+          </div>
+          <form onSubmit="{{ enviarChat }}" style="display:flex;gap:var(--space-2);padding:var(--space-3);border-top:1px solid var(--color-divider)">
+            <input class="input" value="{{ chatTexto }}" onInput="{{ setChatTexto }}" placeholder="Escribe tu pregunta…">
+            <button class="btn btn-primary" type="submit">Enviar</button>
+          </form>
+        </div>
+      </sc-if>
+      <button class="btn btn-primary" onClick="{{ abrirChat }}" style="background:var(--color-bg);box-shadow:var(--shadow-sm);padding:11px 18px">Hablar con nosotros</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ arAbierto }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" onClick="{{ cerrarAR }}">
+      <div class="dialog" style="width:min(520px,100%)">
+        <h3 class="dialog-title" style="font-weight:400">Ver en tu espacio</h3>
+        <div class="plate" style="aspect-ratio:3/4;max-height:46vh;background:repeating-linear-gradient(135deg,#eae9e9 0 10px,#e1dedb 10px 20px);display:grid;place-items:center;border-radius:var(--radius-md)">
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:0.08em;color:#7d7979">vista de cámara + modelo 3D</span>
+        </div>
+        <p class="dialog-body" style="margin:0">Mueve el celular despacio para que reconozca el piso y pon el mueble donde quieras. Puedes girarlo y cambiar el acabado sin salir de la vista.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" onClick="{{ cerrarAR }}">Cerrar</button>
+          <button class="btn btn-primary" onClick="{{ cerrarAR }}">Abrir la cámara</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;envioGratisDesde&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:500000,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:2000000,&quot;step&quot;:50000,&quot;unit&quot;:&quot;COP&quot;,&quot;section&quot;:&quot;Comercial&quot;},&quot;arActivo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Funciones&quot;}}">
+const COP = (n) => '$ ' + Math.round(n).toLocaleString('es-CO');
+const PRODUCTOS = [
+  {id:'liena', nombre:'Sofá Liena 3 puestos', cat:'Sofás', precio:1890000, material:'Tapizado', medidas:'212 × 92 × 84 cm', peso:'54 kg', montaje:'Patas a rosca, 10 min', entrega:'Despacho en 5 días', rating:4.8, n:412, foto:'sofá liena — 3/4 en sala', desc:'Tres puestos de verdad, con asiento de 60 cm de fondo y espuma de alta densidad que no se hunde al año. La tela es antimanchas y la funda sale completa para lavar.'},
+  {id:'marbella', nombre:'Sofá Marbella 2 puestos', cat:'Sofás', precio:1450000, material:'Tapizado', medidas:'168 × 90 × 84 cm', peso:'41 kg', montaje:'Patas a rosca, 10 min', entrega:'Despacho en 5 días', rating:4.6, n:233, foto:'sofá marbella — frontal', desc:'El dos puestos para apartamentos: mide poco más de metro y medio y sigue siendo cómodo para la siesta del domingo.'},
+  {id:'duero', nombre:'Sofá en L Duero', cat:'Sofás', precio:2390000, material:'Tapizado', medidas:'252 × 155 × 84 cm', peso:'72 kg', montaje:'Módulos con grapa, 20 min', entrega:'Despacho en 7 días', rating:4.7, n:188, foto:'sofá en l duero — lateral', desc:'El módulo largo se arma a izquierda o derecha sin herramientas, así que te sirve aunque cambies de apartamento.'},
+  {id:'vera', nombre:'Silla Vera en roble', cat:'Sillas', precio:259000, material:'Madera maciza', medidas:'45 × 52 × 82 cm', peso:'5 kg', montaje:'4 tornillos, 5 min', entrega:'Despacho en 3 días', rating:4.9, n:617, foto:'silla vera — 3/4', desc:'Roble macizo con acabado al aceite, lijado a mano en el taller. Liviana y apilable de a dos.'},
+  {id:'mira', nombre:'Silla tapizada Mira', cat:'Sillas', precio:319000, material:'Tapizado', medidas:'47 × 55 × 84 cm', peso:'6 kg', montaje:'4 tornillos, 5 min', entrega:'Despacho en 3 días', rating:4.5, n:304, foto:'silla mira — frontal', desc:'Asiento acolchado y espaldar curvo: la silla de comedor para los almuerzos que se alargan hasta las seis.'},
+  {id:'uma', nombre:'Butaco Uma', cat:'Sillas', precio:189000, material:'Metal y madera', medidas:'38 × 38 × 65 cm', peso:'4 kg', montaje:'Viene armado', entrega:'Despacho en 3 días', rating:4.4, n:151, foto:'butaco uma — barra de cocina', desc:'Para la barra de la cocina. Estructura en acero con apoyapiés y asiento en madera de roble.'},
+  {id:'ares', nombre:'Mesa de comedor Ares', cat:'Mesas', precio:1090000, material:'Madera maciza', medidas:'160 × 90 × 75 cm', peso:'32 kg', montaje:'Patas atornilladas, 15 min', entrega:'Despacho en 5 días', rating:4.8, n:389, foto:'mesa ares — cenital', desc:'Seis puestos sin apretarse. Tablero en roble macizo de 25 mm con canto biselado a mano.'},
+  {id:'nube', nombre:'Mesa de centro Nube', cat:'Mesas', precio:429000, material:'Madera maciza', medidas:'100 × 55 × 40 cm', peso:'12 kg', montaje:'Patas a rosca, 5 min', entrega:'Despacho en 3 días', rating:4.6, n:207, foto:'mesa nube — con sofá', desc:'Entrepaño inferior para los libros y el control. Esquinas redondeadas, que es lo que importa con niños en casa.'},
+  {id:'lumo', nombre:'Escritorio Lumo', cat:'Mesas', precio:649000, material:'Metal y madera', medidas:'120 × 60 × 74 cm', peso:'18 kg', montaje:'6 tornillos, 15 min', entrega:'Despacho en 4 días', rating:4.5, n:162, foto:'escritorio lumo — con portátil', desc:'Pasacables atrás y un cajón plano para lo que no quieres ver en la videollamada. Cabe en un rincón de 1,20 m.'},
+  {id:'sella', nombre:'Cama Sella doble', cat:'Camas', precio:1290000, material:'Madera maciza', medidas:'140 × 190 cm · alto 90 cm', peso:'44 kg', montaje:'Estructura con herrajes, 40 min', entrega:'Despacho en 7 días', rating:4.7, n:276, foto:'cama sella — alcoba', desc:'Tendido de tablillas incluido y 28 cm libres debajo para cajas. No cruje: los herrajes son metálicos, no plásticos.'},
+  {id:'abedul', nombre:'Base cama con baúl Abedul', cat:'Camas', precio:1590000, material:'Madera maciza', medidas:'140 × 190 cm · alto 35 cm', peso:'58 kg', montaje:'Viene armada', entrega:'Despacho en 7 días', rating:4.6, n:198, foto:'base cama abedul — abierta', desc:'Se abre con dos dedos gracias a los pistones de gas y guarda 580 litros de cobijas y maletas.'},
+  {id:'ona', nombre:'Espaldar en lino Ona', cat:'Camas', precio:489000, material:'Tapizado', medidas:'160 × 8 × 120 cm', peso:'14 kg', montaje:'Anclado a pared, 20 min', entrega:'Despacho en 5 días', rating:4.5, n:143, foto:'espaldar ona — detalle de tela', desc:'Lino lavado sobre acolchado de 8 cm: apoyas la espalda para leer y la pared deja de estar fría.'}
+];
+const RESENAS = [
+  {estrellas:'★★★★★', fecha:'hace 3 semanas', autor:'Camila R., Chapinero', texto:'Llegó dos días antes de lo prometido y los muchachos lo subieron a un cuarto piso sin ascensor sin poner problema. La madera sí es maciza, se nota al levantarlo.'},
+  {estrellas:'★★★★★', fecha:'hace 1 mes', autor:'Andrés G., Medellín', texto:'Usé lo de verlo en la sala con el celular antes de comprar y le atiné a la medida al centímetro. Llevaba meses dudando y al final fue cosa de un minuto.'},
+  {estrellas:'★★★★☆', fecha:'hace 2 meses', autor:'Laura P., Cali', texto:'Muy buena relación precio-calidad para ser hecho a la medida. El armado me tomó un poco más de lo que dicen porque lo hice sola, pero las instrucciones son claras.'}
+];
+const PEDIDOS = [
+  {id:'NG-2418', cliente:'Camila Rojas', ciudad:'Chapinero, Bogotá', producto:'Sofá Liena 3 puestos', valor:1890000, estado:'En ruta', tagClase:'tag-outline'},
+  {id:'NG-2417', cliente:'Andrés Gutiérrez', ciudad:'Medellín', producto:'Mesa de comedor Ares', valor:1090000, estado:'En taller', tagClase:'tag-accent'},
+  {id:'NG-2416', cliente:'Laura Pineda', ciudad:'Suba, Bogotá', producto:'Cama Sella + Espaldar Ona', valor:1779000, estado:'Entregado', tagClase:'tag-neutral'},
+  {id:'NG-2415', cliente:'Julián Mesa', ciudad:'Cali', producto:'6 × Silla Vera en roble', valor:1554000, estado:'En taller', tagClase:'tag-accent'},
+  {id:'NG-2414', cliente:'Daniela Torres', ciudad:'Usaquén, Bogotá', producto:'Base cama con baúl Abedul', valor:1590000, estado:'Entregado', tagClase:'tag-neutral'},
+  {id:'NG-2413', cliente:'Sebastián Ruiz', ciudad:'Bucaramanga', producto:'Escritorio Lumo', valor:649000, estado:'En ruta', tagClase:'tag-outline'},
+  {id:'NG-2412', cliente:'Valentina Peña', ciudad:'Kennedy, Bogotá', producto:'Mesa de centro Nube', valor:429000, estado:'Entregado', tagClase:'tag-neutral'},
+  {id:'NG-2411', cliente:'Mateo Herrera', ciudad:'Barranquilla', producto:'Sofá en L Duero', valor:2390000, estado:'Pago pendiente', tagClase:'tag-outline'}
+];
+const DIA = 86400000;
+const HOY = new Date(2026, 8, 10);
+const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const fechaCorta = (d) => new Intl.DateTimeFormat('es-CO',{day:'numeric',month:'short'}).format(d);
+const SERIE = (() => {
+  const out = [];
+  for (let i=179; i>=0; i--) {
+    const d = new Date(HOY.getTime() - i*DIA), dow = d.getDay();
+    const base = dow===0 ? 1.1 : dow===6 ? 4.3 : 3.3;
+    const onda = 1 + 0.26*Math.sin(i/8.5) + 0.11*Math.cos(i/3.1);
+    const tendencia = 1 + (179-i)/620;
+    const ventas = Math.round(base*onda*tendencia*520000/10000)*10000;
+    out.push({fecha:d, iso:iso(d), ventas, pedidos:Math.max(1, Math.round(ventas/1463000))});
+  }
+  return out;
+})();
+const TOP_BASE = [
+  ['Sofá Liena 3 puestos', 38, 71820000],
+  ['Mesa de comedor Ares', 31, 33790000],
+  ['Silla Vera en roble', 96, 24864000],
+  ['Cama Sella doble', 17, 21930000],
+  ['Base cama con baúl Abedul', 11, 17490000]
+];
+class Component extends DCLogic {
+  state = { vista:'home', cat:'Todos', mat:'Todos', precioMax:2500000, sel:'liena', carrito:0, ar:false, acabado:'Roble natural',
+    desde: iso(new Date(HOY.getTime() - 29*DIA)), hasta: iso(HOY), gran:'Semana', barra:null,
+    usuario:'', clave:'', autenticado:false, errorLogin:'',
+    chatAbierto:false, chatTexto:'', chat:[{rol:'bot', texto:'¡Hola! Soy Nogalito, el asistente de la fábrica. Pregúntame por envíos, precios, garantía, armado o dónde quedamos.'}],
+    precios:{}, imgs:{}, descs:{}, nombres:{}, guardado:'',
+    nuevos:[], eliminados:[], sec:'resumen',
+    form:{nombre:'', cat:'Sofás', material:'Madera maciza', precio:'', medidas:'', desc:'', img:null} };
+  rango(){ const s=this.state; return SERIE.filter(d=>d.iso>=s.desde && d.iso<=s.hasta); }
+  agrupar(dias){
+    const g=this.state.gran, mapa=new Map();
+    dias.forEach(d=>{
+      let clave, etiqueta;
+      if (g==='Día') { clave=d.iso; etiqueta=fechaCorta(d.fecha); }
+      else if (g==='Mes') { clave=d.iso.slice(0,7); etiqueta=new Intl.DateTimeFormat('es-CO',{month:'short',year:'2-digit'}).format(d.fecha); }
+      else { const l=new Date(d.fecha.getTime() - ((d.fecha.getDay()+6)%7)*DIA); clave=iso(l); etiqueta=fechaCorta(l); }
+      const b=mapa.get(clave)||{clave, etiqueta, ventas:0, pedidos:0, dias:0};
+      b.ventas+=d.ventas; b.pedidos+=d.pedidos; b.dias++; mapa.set(clave,b);
+    });
+    return [...mapa.values()];
+  }
+  productos(){ const s=this.state;
+    return PRODUCTOS.concat(s.nuevos)
+      .filter(p=>!s.eliminados.includes(p.id))
+      .map(p=>({...p, nombre:s.nombres[p.id] ?? p.nombre, precio:s.precios[p.id] ?? p.precio,
+        desc:s.descs[p.id] ?? p.desc, img:s.imgs[p.id] ?? p.img ?? null})); }
+  setForm(campo, e){ const v=e.target.value; this.setState(st=>({form:{...st.form, [campo]:v}})); }
+  fotoForm(e){
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    const fr=new FileReader();
+    fr.onload=()=>this.setState(st=>({form:{...st.form, img:fr.result}}));
+    fr.readAsDataURL(f);
+  }
+  crear(e){
+    if (e) e.preventDefault();
+    const f=this.state.form;
+    if (!f.nombre.trim() || !Number(f.precio)) { this.setState({guardado:'Falta el nombre o el precio del producto'}); return; }
+    const nuevo={
+      id:'p'+Date.now(), nombre:f.nombre.trim(), cat:f.cat, precio:Number(f.precio), material:f.material,
+      medidas:f.medidas.trim()||'Medidas por definir', peso:'—', montaje:'Según el mueble', entrega:'Despacho en 5 días',
+      rating:5, n:0, foto:'foto pendiente', img:f.img,
+      desc:f.desc.trim()||'Mueble fabricado en nuestro taller de Puente Aranda.'
+    };
+    this.setState(st=>({nuevos:[...st.nuevos, nuevo], guardado:'"'+nuevo.nombre+'" se publicó en el catálogo',
+      form:{nombre:'', cat:'Sofás', material:'Madera maciza', precio:'', medidas:'', desc:'', img:null}}));
+  }
+  subirFoto(id, e){
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    const fr=new FileReader();
+    fr.onload=()=>this.setState(st=>({imgs:{...st.imgs, [id]:fr.result}, guardado:'Foto actualizada · se ve ya en la tienda'}));
+    fr.readAsDataURL(f);
+  }
+  responder(q){
+    const t=q.toLowerCase();
+    const r=(s)=>s;
+    if(/env[íi]o|domicilio|despacho|cu[áa]nto se demora|entrega/.test(t)) return r('Despachamos de nuestro taller en Puente Aranda: Bogotá en 3 días hábiles y el resto del país entre 5 y 8. El envío es gratis desde $ 500.000.');
+    if(/precio|vale|cuesta|barato|descuento|promo/.test(t)) return r('Los precios van desde $ 189.000 (butaco Uma) hasta $ 2.390.000 (sofá en L Duero). Como somos la fábrica, no hay sobrecosto de almacén ni de distribuidor.');
+    if(/garant[íi]a|se da[ñn]a|reclamo/.test(t)) return r('Todos los muebles tienen 10 años de garantía de fábrica en estructura y herrajes, y 2 años en telas. Si algo falla, lo recogemos y lo reparamos en el taller.');
+    if(/arma|instala|monta/.test(t)) return r('La mayoría se arma en 5 a 15 minutos con las instrucciones que van dentro. Si prefieres, lo armamos en tu casa por $ 89.000 y nos llevamos el empaque.');
+    if(/ubica|direcci[óo]n|d[óo]nde|showroom|visitar|taller|f[áa]brica/.test(t)) return r('Estamos en la Cra. 56 #17-40, Puente Aranda, Bogotá. El taller se puede visitar de lunes a viernes de 8:00 a. m. a 5:00 p. m. y sábados hasta mediodía.');
+    if(/pago|cuota|tarjeta|addi|sistecr|financ/.test(t)) return r('Recibimos tarjeta, PSE, Addi y Sistecrédito: hasta 12 cuotas. También contraentrega en Bogotá.');
+    if(/devoluci|cambio|arrepent/.test(t)) return r('Tienes 30 días para devolverlo. Lo recogemos sin costo y te devolvemos la plata al mismo medio de pago.');
+    if(/medida|a la medida|personaliz|color|acabado|tela/.test(t)) return r('Sí hacemos medidas y acabados especiales: roble natural, nogal oscuro, lino crudo y gris piedra son los de línea. Cuéntame las medidas y te cotizo.');
+    if(/ar|realidad|c[áa]mara|ver en mi/.test(t)) return r('En cada producto está el botón "Ver en tu espacio": apuntas con el celular y el mueble aparece a escala real en tu sala.');
+    if(/hola|buenas|buenos d[íi]as/.test(t)) return r('¡Hola! ¿En qué te ayudo? Puedo contarte de envíos, precios, garantía o cómo llegar al taller.');
+    return r('No estoy seguro de eso. Escríbenos por WhatsApp al 300 000 0000 y un asesor del taller te responde en minutos.');
+  }
+  estrellas(r){ const l=Math.round(r); return '★★★★★'.slice(0,l)+'☆☆☆☆☆'.slice(0,5-l); }
+  card(p){ return {...p, precioFmt:COP(p.precio),
+    fondo:p.img?('url('+p.img+') center/cover no-repeat'):'repeating-linear-gradient(135deg,#eae9e9 0 10px,#e1dedb 10px 20px)',
+    etiqueta:p.img?'':p.foto,
+    estrellas:this.estrellas(p.rating), nResenas:p.n, abrir:(e)=>{ if(e) e.preventDefault(); this.setState({vista:'ficha', sel:p.id}); window.scrollTo(0,0); }}; }
+  renderVals(){
+    const s=this.state, envioDesde=this.props.envioGratisDesde ?? 500000;
+    const nav=(v)=>(e)=>{ if(e) e.preventDefault(); this.setState({vista:v}); window.scrollTo(0,0); };
+    const LISTA=this.productos();
+    const res=LISTA.filter(p=>(s.cat==='Todos'||p.cat===s.cat)&&(s.mat==='Todos'||p.material===s.mat)&&p.precio<=s.precioMax);
+    const p=LISTA.find(x=>x.id===s.sel)||LISTA[0];
+    const rel=LISTA.filter(x=>x.id!==p.id&&x.cat!==p.cat).slice(0,3);
+    const dias=this.rango(), buckets=this.agrupar(dias);
+    const maxB=Math.max(1, ...buckets.map(b=>b.ventas));
+    const totVentas=dias.reduce((a,d)=>a+d.ventas,0), totPedidos=dias.reduce((a,d)=>a+d.pedidos,0);
+    const nDias=Math.max(1, dias.length), f=nDias/30;
+    const top=TOP_BASE.map(t=>[t[0], Math.max(1,Math.round(t[1]*f)), Math.round(t[2]*f/10000)*10000]);
+    const maxTop=Math.max(1, ...top.map(t=>t[2]));
+    const sel=buckets.find(b=>b.clave===s.barra)||null;
+    const ult=dias.slice(-14);
+    const chispa=(off)=>{ const v=ult.map((d,i)=>d.ventas*(1+0.05*Math.sin(i+off))), mx=Math.max(1,...v);
+      return v.map(x=>({alto:Math.max(12, Math.round(x/mx*100))})); };
+    const mezcla=[['Sofás',46,'var(--color-accent-500)'],['Mesas',22,'var(--color-accent-300)'],['Camas',20,'var(--color-accent-200)'],['Sillas',12,'var(--color-neutral-300)']];
+    return {
+      esHome:s.vista==='home', esCatalogo:s.vista==='catalogo', esFicha:s.vista==='ficha',
+      esAdmin:s.vista==='admin' && s.autenticado,
+      esLogin:s.vista==='admin' && !s.autenticado,
+      esTienda:s.vista!=='admin',
+      usuario:s.usuario, clave:s.clave, errorLogin:s.errorLogin, hayError:!!s.errorLogin,
+      setUsuario:(e)=>this.setState({usuario:e.target.value}),
+      setClave:(e)=>this.setState({clave:e.target.value}),
+      entrar:(e)=>{ if(e) e.preventDefault();
+        const ok=s.usuario.trim()==='admin' && s.clave==='nogal2026';
+        this.setState(ok?{autenticado:true, errorLogin:'', clave:''}:{errorLogin:'Usuario o contraseña incorrectos. Prueba admin / nogal2026.'}); },
+      salir:()=>this.setState({autenticado:false, vista:'home', usuario:'', clave:''}),
+      chatAbierto:s.chatAbierto, chatTexto:s.chatTexto,
+      chat:s.chat.map((m,i)=>({...m, just:m.rol==='yo'?'flex-end':'flex-start',
+        fondo:m.rol==='yo'?'var(--color-accent-100)':'transparent',
+        borde:m.rol==='yo'?'var(--color-accent-300)':'var(--color-divider)', key:i})),
+      abrirChat:()=>this.setState(st=>({chatAbierto:!st.chatAbierto})),
+      cerrarChat:()=>this.setState({chatAbierto:false}),
+      setChatTexto:(e)=>this.setState({chatTexto:e.target.value}),
+      enviarChat:(e)=>{ if(e) e.preventDefault(); const q=this.state.chatTexto.trim(); if(!q) return;
+        this.setState(st=>({chat:[...st.chat,{rol:'yo',texto:q},{rol:'bot',texto:this.responder(q)}], chatTexto:''})); },
+      sugerencias:['¿Cuánto demora el envío?','¿Dónde quedan?','¿Tienen garantía?','¿Puedo pagar a cuotas?'].map(q=>({
+        texto:q, usar:()=>this.setState(st=>({chat:[...st.chat,{rol:'yo',texto:q},{rol:'bot',texto:this.responder(q)}]}))
+      })),
+      irHome:nav('home'), irCatalogo:nav('catalogo'), irAdmin:nav('admin'),
+      carrito:s.carrito, envioDesdeFmt:COP(envioDesde),
+      categorias:['Sofás','Sillas','Mesas','Camas'].map(c=>({
+        nombre:c, foto:c.toLowerCase()+' — ambiente',
+        desdeFmt:COP(Math.min(...LISTA.filter(x=>x.cat===c).map(x=>x.precio))),
+        abrir:(e)=>{ if(e) e.preventDefault(); this.setState({vista:'catalogo', cat:c}); window.scrollTo(0,0); }
+      })),
+      destacados:[LISTA[0],LISTA[3],LISTA[6],LISTA[9]].map(x=>this.card(x)),
+      resultados:res.map(x=>this.card(x)), nResultados:res.length, sinResultados:res.length===0,
+      relacionados:rel.map(x=>this.card(x)),
+      testimonios:[
+        {estrellas:'★★★★★', autor:'Lucía M., Bogotá', producto:'Mesa Ares', texto:'Pagué por la mesa completa lo que me cobraban solo por el tablero en un almacén del norte. Dos años después sigue igualita.'},
+        {estrellas:'★★★★★', autor:'Andrés T., Chía', producto:'Sofá Liena', texto:'Lo puse en la sala con la cámara antes de comprarlo. Cabía justo, y así fue.'},
+        {estrellas:'★★★★☆', autor:'Rocío D., Medellín', producto:'Cama Sella', texto:'El armado entre dos, media hora. Lo que más agradezco es que no cruje de noche.'}
+      ],
+      precioMax:s.precioMax, precioMaxFmt:COP(s.precioMax),
+      setCat:(e)=>this.setState({cat:e.target.value}),
+      setMat:(e)=>this.setState({mat:e.target.value}),
+      setPrecio:(e)=>this.setState({precioMax:Number(e.target.value)}),
+      setAcabado:(e)=>this.setState({acabado:e.target.value}),
+      desde:s.desde, hasta:s.hasta,
+      setDesde:(e)=>this.setState({desde:e.target.value, barra:null}),
+      setHasta:(e)=>this.setState({hasta:e.target.value, barra:null}),
+      setGran:(e)=>this.setState({gran:e.target.value, barra:null}),
+      atajos:[['Hoy',0],['7 días',6],['30 días',29],['90 días',89]].map(a=>({
+        texto:a[0], usar:()=>this.setState({desde:iso(new Date(HOY.getTime()-a[1]*DIA)), hasta:iso(HOY), barra:null,
+          gran:a[1]<=6?'Día':a[1]<=29?'Día':a[1]<=89?'Semana':'Mes'})
+      })),
+      limpiar:()=>this.setState({cat:'Todos', mat:'Todos', precioMax:2500000}),
+      anadir:()=>this.setState(st=>({carrito:st.carrito+1})),
+      abrirAR:(e)=>{ if(e) e.preventDefault(); this.setState({ar:true}); },
+      cerrarAR:()=>this.setState({ar:false}),
+      arAbierto:(this.props.arActivo ?? true) && s.ar,
+      pNombre:p.nombre, pCat:p.cat, pPrecioFmt:COP(p.precio), pDesc:p.desc,
+      pFoto:p.img?'':p.foto,
+      pFondo:p.img?('url('+p.img+') center/cover no-repeat'):'repeating-linear-gradient(135deg,#eae9e9 0 12px,#e1dedb 12px 24px)',
+      pMedidas:p.medidas, pMaterial:p.material, pPeso:p.peso, pMontaje:p.montaje, pEntrega:p.entrega,
+      pRating:String(p.rating).replace('.',','), pNResenas:p.n, pEstrellas:this.estrellas(p.rating),
+      pCuotaFmt:COP(Math.round(p.precio/12/1000)*1000),
+      miniaturas:['detalle de la tela','vista trasera','medidas sobre plano'],
+      resenas:RESENAS,
+      gestion:LISTA.map(x=>({
+        id:x.id, nombre:x.nombre, cat:x.cat, precio:x.precio, precioFmt:COP(x.precio),
+        estadoFoto:x.img?'Foto propia cargada':'Sin foto — usando marcador',
+        mini:x.img?('url('+x.img+') center/cover no-repeat'):'repeating-linear-gradient(135deg,#eae9e9 0 6px,#e1dedb 6px 12px)',
+        subir:(e)=>this.subirFoto(x.id, e),
+        setPrecio:(e)=>{ const v=Number(e.target.value)||0; this.setState(st=>({precios:{...st.precios, [x.id]:v}, guardado:'Precio de '+x.nombre+' actualizado a '+COP(v)})); },
+        desc:x.desc,
+        setNombre:(e)=>{ const v=e.target.value; this.setState(st=>({nombres:{...st.nombres, [x.id]:v}})); },
+        eliminar:()=>this.setState(st=>({eliminados:[...st.eliminados, x.id], guardado:'"'+x.nombre+'" se quitó del catálogo'})),
+        setDesc:(e)=>{ const v=e.target.value; this.setState(st=>({descs:{...st.descs, [x.id]:v}, guardado:'Descripción de '+x.nombre+' actualizada'})); },
+        quitar:()=>this.setState(st=>{ const pr={...st.precios}, im={...st.imgs}, de={...st.descs}, no={...st.nombres}; delete pr[x.id]; delete im[x.id]; delete de[x.id]; delete no[x.id]; return {precios:pr, imgs:im, descs:de, nombres:no, guardado:'Se restauró '+x.nombre}; })
+      })),
+      secResumen:s.sec==='resumen', secProductos:s.sec==='productos',
+      secPedidos:s.sec==='pedidos', secProduccion:s.sec==='produccion',
+      secTitulo:({resumen:'Resumen de ventas', productos:'Productos', pedidos:'Pedidos', produccion:'Producción e inventario'})[s.sec],
+      secSub:({resumen:'Cómo va la facturación en el rango que elijas.', productos:'Publica, edita o retira muebles del catálogo.', pedidos:'Seguimiento de lo que sale del taller.', produccion:'Órdenes en piso y materiales por reponer.'})[s.sec],
+      secciones:[['resumen','Resumen',''],['pedidos','Pedidos',String(PEDIDOS.length)],['productos','Productos',String(LISTA.length)],['produccion','Producción','56']].map(x=>({
+        nombre:x[1], cuenta:x[2],
+        fondo:s.sec===x[0]?'var(--color-accent-100)':'transparent',
+        borde:s.sec===x[0]?'var(--color-accent)':'var(--color-divider)',
+        ir:()=>this.setState({sec:x[0]})
+      })),
+      guardado:s.guardado, hayGuardado:!!s.guardado,
+      form:s.form, formFoto:s.form.img?'Foto lista':'Sin foto',
+      setFNombre:(e)=>this.setForm('nombre',e), setFCat:(e)=>this.setForm('cat',e),
+      setFMaterial:(e)=>this.setForm('material',e), setFPrecio:(e)=>this.setForm('precio',e),
+      setFMedidas:(e)=>this.setForm('medidas',e), setFDesc:(e)=>this.setForm('desc',e),
+      setFFoto:(e)=>this.fotoForm(e), crear:(e)=>this.crear(e),
+      hayEliminados:s.eliminados.length>0,
+      eliminados:s.eliminados.map(id=>{
+        const base=PRODUCTOS.concat(s.nuevos).find(x=>x.id===id)||{nombre:id};
+        return {nombre:s.nombres[id] ?? base.nombre,
+          volver:()=>this.setState(st=>({eliminados:st.eliminados.filter(e2=>e2!==id), guardado:'"'+(base.nombre)+'" volvió al catálogo'}))};
+      }),
+      kpis:[
+        {titulo:'Ventas del rango', valor:COP(totVentas), nota:nDias+(nDias===1?' día':' días')+' · agrupado por '+s.gran.toLowerCase(), delta:'+12,4%', spark:chispa(0)},
+        {titulo:'Pedidos', valor:String(totPedidos), nota:'87% pagados en línea', delta:'+8,1%', spark:chispa(1)},
+        {titulo:'Ticket promedio', valor:COP(totVentas/Math.max(1,totPedidos)), nota:'1,4 muebles por pedido', delta:'+3,6%', spark:chispa(2)},
+        {titulo:'Devoluciones', valor:String(Math.round(totPedidos*0.032)), nota:'3,2% de los pedidos', delta:'−0,4%', spark:chispa(3)}
+      ],
+      mezcla:mezcla.map(m=>({nombre:m[0], pctTexto:m[1]+'%', valor:COP(totVentas*m[1]/100), color:m[2]})),
+      donut:'conic-gradient('+mezcla.map((m,i)=>m[2]+' '+mezcla.slice(0,i).reduce((a,x)=>a+x[1],0)+'% '+mezcla.slice(0,i+1).reduce((a,x)=>a+x[1],0)+'%').join(',')+')',
+      donutTotal:COP(totVentas),
+      barras:buckets.map(b=>({
+        clave:b.clave, label:b.etiqueta,
+        alto:Math.max(3, Math.round(b.ventas/maxB*100)),
+        titulo:b.etiqueta+' · '+COP(b.ventas)+' · '+b.pedidos+' pedidos',
+        fondo:b.clave===s.barra?'var(--color-accent-300)':'var(--color-accent-100)',
+        elegir:()=>this.setState(st=>({barra: st.barra===b.clave?null:b.clave}))
+      })),
+      haySel:!!sel,
+      selLabel:sel?sel.etiqueta:'',
+      selVentas:sel?COP(sel.ventas):'',
+      selPedidos:sel?(sel.pedidos+(sel.pedidos===1?' pedido':' pedidos')):'',
+      selTicket:sel?COP(sel.ventas/Math.max(1,sel.pedidos)):'',
+      selDias:sel?(sel.dias+(sel.dias===1?' día':' días')):'',
+      granDia:s.gran==='Día', granSemana:s.gran==='Semana', granMes:s.gran==='Mes',
+      catTodos:s.cat==='Todos', catSofas:s.cat==='Sofás', catSillas:s.cat==='Sillas', catMesas:s.cat==='Mesas', catCamas:s.cat==='Camas',
+      matTodos:s.mat==='Todos', matMadera:s.mat==='Madera maciza', matTapizado:s.mat==='Tapizado', matMetal:s.mat==='Metal y madera',
+      acaRoble:s.acabado==='Roble natural', acaNogal:s.acabado==='Nogal oscuro', acaLino:s.acabado==='Lino crudo', acaGris:s.acabado==='Gris piedra',
+      limpiarSel:()=>this.setState({barra:null}),
+      topProductos:top.map(t=>({nombre:t[0], unidades:t[1], totalFmt:COP(t[2]), pct:Math.round(t[2]/maxTop*100)})),
+      pedidos:PEDIDOS.map(o=>({...o, valorFmt:COP(o.valor)})), nPedidos:totPedidos,
+      etapas:[
+        {nombre:'Corte', ordenes:14, dias:'1,2'},
+        {nombre:'Armado', ordenes:22, dias:'2,0'},
+        {nombre:'Tapicería', ordenes:9, dias:'2,6'},
+        {nombre:'Acabado y empaque', ordenes:11, dias:'1,1'}
+      ],
+      insumos:[
+        {nombre:'Roble macizo 25 mm', stock:'18 láminas', estado:'Crítico', tagClase:'tag-accent'},
+        {nombre:'Lino crudo antimanchas', stock:'62 m', estado:'Bajo', tagClase:'tag-outline'},
+        {nombre:'Espuma alta densidad', stock:'140 bloques', estado:'Normal', tagClase:'tag-neutral'},
+        {nombre:'Herrajes metálicos', stock:'1.240 und', estado:'Normal', tagClase:'tag-neutral'}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
