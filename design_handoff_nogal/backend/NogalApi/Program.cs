@@ -58,7 +58,10 @@ builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 builder.Services.AddSingleton<Product3dGenerationQueue>();
 builder.Services.AddSingleton<IProduct3dGenerationQueue>(services => services.GetRequiredService<Product3dGenerationQueue>());
 builder.Services.AddHostedService(services => services.GetRequiredService<Product3dGenerationQueue>());
-builder.Services.AddScoped<IProduct3dGenerationService, UnavailableProduct3dGenerationService>();
+builder.Services.Configure<Product3dOptions>(builder.Configuration.GetSection(Product3dOptions.SectionName));
+builder.Services.AddScoped<UnavailableProduct3dGenerationService>();
+builder.Services.AddScoped<MeshyProduct3dGenerationService>();
+builder.Services.AddScoped<IProduct3dGenerationService, Product3dGenerationDispatcher>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");
