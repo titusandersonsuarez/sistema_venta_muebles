@@ -11,9 +11,9 @@ Eres un ingeniero de software full-stack senior. Vas a continuar el desarrollo d
 ### Estado actual del proyecto
 
 - `design_handoff_nogal/` — paquete de diseño (fuente de verdad visual): `Nogal Muebles.dc.html` (prototipo completo, tienda + panel), `styles.css` (tokens y componentes del sistema "Classical"), `sistema-classical.md` (guía de uso) y `README.md` (spec funcional completa de cada pantalla).
-- `backend/NogalApi/` — API en ASP.NET Core 9 + EF Core + PostgreSQL. Ya implementado: modelo `Usuario` (usuarios del panel), `AppDbContext`, `AuthService` (BCrypt + JWT), `AuthController` (`POST /api/auth/login`, `GET /api/auth/me`), seed automático de un admin inicial, CORS para el front, Swagger con auth Bearer, `Dockerfile`.
+- `backend/NogalApi/` — API en ASP.NET Core 9 + EF Core + SQL Server Express (`.\SQLEXPRESS`, base `NogalDb`). Ya implementado: modelos `Usuario`, `Product`, `ProductImage`, `Order` y `OrderItem`; `AppDbContext`; servicios de autenticación, productos, pedidos y ventas; JWT con BCrypt; seed automático; CORS; Swagger con auth Bearer; almacenamiento local de imágenes; `Dockerfile`.
 - `frontend/nogal-web/` — React 18 + TypeScript + Vite. Ya implementado: `styles.css` copiado del paquete de diseño (úsalo tal cual, no reinventes tokens), cliente `apiFetch` con manejo de token/errores, `AuthContext` + `RequireAuth`, `LoginPage` (fiel al prototipo), `AdminLayout` (rail lateral con los 4 módulos + topbar) y una página *placeholder* por módulo (Resumen, Pedidos, Productos, Producción) más un `HomePlaceholder` para la tienda pública.
-- `docker-compose.yml` en la raíz levanta Postgres + la API.
+- El `docker-compose.yml` histórico de Postgres no se usa: el backend actual se conecta a SQL Server Express mediante `Trusted_Connection=True` y `TrustServerCertificate=True`.
 
 Antes de escribir código, **lee `design_handoff_nogal/README.md` completo** (ahí está la especificación pantalla por pantalla, el modelo de datos sugerido y los endpoints mínimos) y **revisa el HTML del prototipo** para copiar la disposición y las clases exactas (`.card`, `.table`, `.tag`, `.seg`, `.dialog`, etc.) — no inventes markup nuevo.
 
@@ -30,7 +30,7 @@ Antes de escribir código, **lee `design_handoff_nogal/README.md` completo** (ah
 1. **Productos (CRUD)** — backend: modelo `Product` (Id, Slug, Nombre, Categoria, Material, PrecioCOP, Medidas, Peso, Armado, Descripcion, Estado [Disponible/EnProceso/Vendido], ImagenUrl, Activo) + `ProductImage`, subida de imagen (multipart → bucket, guarda solo la URL), endpoints `GET/POST/PUT/DELETE /api/admin/products` y `GET /api/products` (público, con filtros categoría/material/precioMax). Frontend: reemplaza el placeholder de `ProductosPage` con el formulario "Subir un producto nuevo" y la tabla editable (miniatura, nombre, categoría, precio, descripción, foto, estado, acciones Restaurar/Eliminar) tal como la describe el README.
 2. **Catálogo público + ficha de producto** — usa `GET /api/products`: página de catálogo con los filtros controlados por estado (categoría, precio máximo, material) y la ficha de producto (galería, precio, control de acabado, tabla de medidas) consumiendo el mismo endpoint.
 3. **Pedidos** — modelo `Order`/`OrderItem`, tabla en el panel (`GET/PATCH /api/admin/orders`) con los estados En ruta / En taller / Entregado / Pago pendiente.
-4. **Resumen (dashboard)** — endpoint `GET /api/admin/sales?from=&to=&granularity=` que devuelva *buckets* {label, ventas, pedidos}; en el front, las 4 tarjetas KPI, la gráfica de ventas en el tiempo y la mezcla por categoría, tal como en el prototipo.
+4. **Resumen (dashboard)** — implementado. El endpoint `GET /api/admin/sales?from=&to=&granularity=day|week|month` devuelve totales, buckets, mezcla por categoría y top 5; la pantalla React consume datos reales.
 5. **Producción** — modelo `ProductionOrder` / `InventoryItem`, tarjetas de etapa y tabla de materiales por reponer.
 6. **Home + contacto + chat "Nogalito"** — home pública completa, formulario de contacto (`POST /api/contact`), y el chat: empieza con `POST /api/chat` por palabras clave (igual al prototipo) dejando el contrato listo para enchufar un LLM (Claude API) más adelante usando el catálogo real como contexto.
 
@@ -64,7 +64,7 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - Subida de foto multipart con guardado en disco (`wwwroot/uploads/products/`) — la BD solo guarda la URL relativa.
   - Endpoint público con filtros (`categoria`, `material`, `precioMax`, paginación) listo, pero sin UI todavía.
 
-**Placeholders (funcionan visualmente pero sin lógica):** Resumen, Pedidos, Producción, Home pública, ficha de producto, chat "Nogalito".
+**Placeholders (funcionan visualmente pero sin lógica):** Producción, Home pública completa, contacto y chat "Nogalito".
 
 ### Qué falta (roadmap ordenado)
 
@@ -84,7 +84,12 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - `CatalogController.Options()` ahora también expone `estadosPedido`.
   - Frontend: `types/order.ts`, `api/orders.ts`, `pages/admin/PedidosPage.tsx` reescrita completa — header con conteo + total del listado, filtro por estado, tabla con Pedido (código + fecha), Cliente, Ciudad, Producto (resumen), Valor derecha, Estado como `.tag` (clases mapeadas: En ruta/Pago pendiente = outline, En taller = accent, Entregado = neutral), select de cambio de estado inline por fila.
   - Verificación real: listar 5 sembrados, filtrar por Entregado (2), obtener por id con items, PATCH cambio de estado, validación 400 con estado inválido, 401 sin auth. 7/7 pasan.
-- [ ] **4. Resumen (dashboard)** — endpoint `GET /api/admin/sales?from=&to=&granularity=day|week|month` devolviendo buckets `{label, ventas, pedidos}`. En el front: 4 tarjetas KPI con sparklines, gráfica de barras interactiva (clic fija selección), anillo `conic-gradient` de mezcla por categoría, top 5 más vendidos con barra hairline.
+- [x] **4. Resumen (dashboard)** — CERRADO el 2026-09-11.
+  - Backend: `Models/Sales/SalesDtos.cs`, `Services/{ISalesService,SalesService,SalesQueryException}.cs`, `Controllers/AdminSalesController.cs`, registrado en `Program.cs`.
+  - Endpoint protegido con rol `Admin`: `GET /api/admin/sales?from=yyyy-MM-dd&to=yyyy-MM-dd&granularity=day|week|month`.
+  - Las fechas representan calendario de Bogotá, con `to` exclusivo y conversión a UTC. Los pedidos `Pago pendiente` se excluyen de ventas confirmadas.
+  - Frontend: `types/sales.ts`, `api/sales.ts`, `pages/admin/ResumenPage.tsx` y estilos de dashboard en `styles.css`. Incluye rangos rápidos, filtros, cuatro KPI, barras seleccionables, mezcla por categoría y top 5.
+  - Verificación real: `401` sin JWT, `400` con fecha inválida, `200` autenticado contra SQL Server con datos reales; `dotnet build` y `npm run build` pasan.
 - [ ] **5. Producción** — modelos `ProductionOrder` + `InventoryItem`. Tarjetas de 4 etapas (Corte, Armado, Tapicería, Acabado y empaque) + tabla "Materiales por reponer" con estado Crítico/Bajo/Normal.
 - [ ] **6. Home pública + contacto + chat "Nogalito"** — home con hero, tarjetas por espacio, más pedidos, servicios, reseñas y footer. Formulario `POST /api/contact`. Chat con `POST /api/chat` empezando por reglas (palabras clave) y dejando el contrato listo para enchufar Claude API con el catálogo real como contexto.
 
@@ -277,6 +282,12 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 - Backend: `Models/Product.cs`, `Models/ProductImage.cs`, `Models/Products/{ProductCatalogo,ProductDtos}.cs`, `Services/{IProductService,ProductService}.cs`, `Services/{IProductImageStorage,LocalProductImageStorage}.cs`, `Options/ImageStorageOptions.cs`, `Controllers/{AdminProductsController,ProductsController,CatalogController}.cs`, `wwwroot/uploads/products/`.
 - Frontend: `types/product.ts`, `api/products.ts`, `pages/admin/ProductosPage.tsx` (reescrito completo), `api/client.ts` (agregado `apiUpload`).
 
+**Módulo 4 — Resumen (dashboard)**
+- Backend: `Models/Sales/SalesDtos.cs`, `Services/{ISalesService,SalesService,SalesQueryException}.cs`, `Controllers/AdminSalesController.cs`, registro en `Program.cs`.
+- Frontend: `types/sales.ts`, `api/sales.ts`, `pages/admin/ResumenPage.tsx` y clases de dashboard en `styles.css`.
+- Regla: solo se consideran ventas confirmadas los pedidos cuyo estado no es `Pago pendiente`.
+- Fechas: `from` inclusivo y `to` exclusivo, interpretados en calendario de Bogotá y convertidos a UTC. La granularidad semanal comienza el lunes.
+
 ### Endpoints activos hoy
 
 | Método | Ruta | Auth | Qué hace |
@@ -294,6 +305,7 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 | DELETE | `/api/admin/products/{id}` | Bearer | Soft delete (`Activo=false`) |
 | POST | `/api/admin/products/{id}/restore` | Bearer | Restaurar |
 | POST | `/api/admin/products/{id}/image` | Bearer (multipart) | Subir imagen (JPG/PNG/WEBP/GIF, máx 5 MB) |
+| GET | `/api/admin/sales?from=yyyy-MM-dd&to=yyyy-MM-dd&granularity=day\|week\|month` | Bearer, rol Admin | Dashboard: totales, buckets, categorías y top 5 |
 | GET | `/uploads/products/{archivo}` | público | Servido por `UseStaticFiles` |
 
 ### Decisiones tomadas en esta sesión
@@ -304,6 +316,7 @@ Login del panel: `admin` / `nogal2026`. Swagger disponible en `http://localhost:
 - **Slug**: autogenerado del nombre (minúsculas + sin acentos + guiones), con sufijo `-2`, `-3`… en colisiones. Único en BD.
 - **Soft delete**: `Product.Activo = false`. Público filtra por Activo; admin puede listar inactivos con `?incluirInactivos=true`.
 - **Guardar en tabla del panel**: patrón borrador → botón "Guardar" explícito por fila (aparece cuando hay cambios). NO autosave onBlur.
+- **Dashboard**: `SalesService` excluye `Pago pendiente`; no cambiar esta regla sin actualizar la documentación y las pruebas.
 
 ### Convenciones vigentes (recordatorio)
 

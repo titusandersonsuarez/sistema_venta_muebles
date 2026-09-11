@@ -48,6 +48,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ISalesService, SalesService>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");

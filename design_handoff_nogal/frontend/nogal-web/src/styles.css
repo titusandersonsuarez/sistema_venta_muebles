@@ -218,6 +218,38 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .table tbody tr:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
 
+.sales-dashboard { display: flex; flex-direction: column; gap: var(--space-5); }
+.sales-toolbar, .sales-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.sales-title { margin: 0; font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: 32px; }
+.sales-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.sales-filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-divider); }
+.sales-filters .field { min-width: 150px; }
+.sales-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
+.sales-kpi strong { font-family: var(--font-heading); font-size: 25px; font-weight: var(--font-heading-weight); font-variant-numeric: tabular-nums; }
+.sales-main-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: var(--space-3); }
+.sales-chart-card, .sales-category-card { min-height: 300px; }
+.sales-chart { display: flex; align-items: end; gap: var(--space-1); height: 210px; padding-top: var(--space-5); overflow-x: auto; }
+.sales-bar-wrap { display: flex; flex: 1 0 22px; align-items: center; justify-content: end; flex-direction: column; gap: var(--space-1); height: 100%; min-width: 22px; color: var(--color-text); cursor: pointer; }
+.sales-bar-wrap:hover .sales-bar, .sales-bar-wrap.is-selected .sales-bar { background: var(--color-accent-700); }
+.sales-bar { display: block; width: 100%; min-height: 3px; background: var(--color-accent); border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: background-color 120ms ease; }
+.sales-bar-label { max-width: 70px; overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; transform: rotate(-35deg); transform-origin: top center; }
+.sales-detail, .sales-error { margin: var(--space-3) 0 0; font-size: 13px; }
+.sales-error { color: var(--color-accent-700); border-left: 1px solid var(--color-accent); padding-left: var(--space-2); }
+.sales-category-content { display: flex; align-items: center; gap: var(--space-5); height: 220px; }
+.sales-ring { display: grid; flex: none; place-items: center; width: 145px; aspect-ratio: 1; border-radius: 50%; }
+.sales-ring::before { content: ''; grid-area: 1 / 1; width: 72%; aspect-ratio: 1; border-radius: 50%; background: var(--color-bg); }
+.sales-ring span { z-index: 1; grid-area: 1 / 1; max-width: 80px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+.sales-legend { display: flex; flex: 1; flex-direction: column; gap: var(--space-2); }
+.sales-legend-row { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: var(--space-2); font-size: 12px; }
+.sales-legend-row i { width: 8px; height: 8px; border-radius: 50%; }
+.sales-products { display: flex; flex-direction: column; }
+.sales-product-row { display: grid; grid-template-columns: 28px 1fr auto auto; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider); font-size: 14px; }
+.sales-product-row:last-child { border-bottom: 0; }
+.sales-product-rank { color: var(--color-accent); font-family: var(--font-heading); font-size: 20px; }
+.sales-product-row strong { font-variant-numeric: tabular-nums; }
+@media (max-width: 850px) { .sales-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sales-main-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .sales-toolbar, .sales-section-heading, .sales-category-content { flex-direction: column; } .sales-kpis { grid-template-columns: 1fr; } .sales-ring { width: 120px; } .sales-product-row { grid-template-columns: 24px 1fr auto; } .sales-product-row strong { grid-column: 2 / -1; } }
+
 .dialog-backdrop {
   position: fixed; inset: 0; display: grid; place-items: center;
   padding: var(--space-4);

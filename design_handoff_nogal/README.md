@@ -53,6 +53,19 @@ React + TypeScript + Vite
 - La carga de imágenes valida extensión, `Content-Type` y firma binaria básica, manteniendo el almacenamiento local y el campo multipart `archivo`.
 - Se conservaron las rutas, DTOs y nombres de propiedades consumidos por React.
 
+### Dashboard implementado
+
+El resumen del panel ya consume datos reales mediante `GET /api/admin/sales`.
+
+- Parámetros obligatorios: `from` y `to` en formato `yyyy-MM-dd`; `to` es exclusivo.
+- `granularity` admite `day`, `week` y `month`.
+- Las fechas se interpretan como calendario de Bogotá y se convierten a UTC antes de consultar SQL Server.
+- Los pedidos con estado `Pago pendiente` no se consideran ventas confirmadas.
+- La respuesta incluye totales de ventas, pedidos, unidades y ticket promedio; buckets temporales; mezcla por categoría; y los cinco productos más vendidos.
+- La pantalla `/admin` incluye atajos de rango, filtros, KPI, barras seleccionables, mezcla por categoría y ranking de productos.
+
+El siguiente módulo pendiente es Producción e inventario.
+
 ### Comandos de verificación
 
 Desde `backend`:
@@ -208,7 +221,7 @@ En producción: filtros y rango de fechas en la URL (query params), datos del se
 - **Endpoints mínimos**:
   - `GET /api/products` (filtros: categoría, material, precioMax, paginación) · `GET /api/products/{slug}`
   - `POST/PUT/DELETE /api/admin/products` · `POST /api/admin/products/{id}/image` (multipart)
-  - `GET /api/admin/sales?from=&to=&granularity=day|week|month` → buckets {label, ventas, pedidos}
+  - `GET /api/admin/sales?from=&to=&granularity=day|week|month` (rol `Admin`) → dashboard con `totales`, `buckets`, `categorias` y `masVendidos`
   - `GET /api/admin/orders` · `PATCH /api/admin/orders/{id}/status`
   - `GET /api/admin/production` · `GET /api/admin/inventory`
   - `POST /api/contact` · `POST /api/chat` (bot; empezar con reglas, luego IA)
