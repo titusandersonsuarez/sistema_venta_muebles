@@ -4,6 +4,20 @@ export interface ProductImage {
   orden: number
 }
 
+export interface ProductVariant {
+  id: number
+  productId: number
+  sku: string
+  nombre: string
+  tipo: string
+  codigoColorHex?: string | null
+  precioAjusteCOP: number
+  fotoUrl?: string | null
+  stock: number
+  activo: boolean
+  orden: number
+}
+
 export interface Product {
   id: number
   slug: string
@@ -26,6 +40,7 @@ export interface Product {
   fechaCreacion: string
   fechaActualizacion: string
   imagenes: ProductImage[]
+  variantes?: ProductVariant[]
 }
 
 export interface PublicProduct {
@@ -47,6 +62,7 @@ export interface PublicProduct {
   modelo3dError?: string | null
   modelo3dSolicitadoEn?: string | null
   imagenes: ProductImage[]
+  variantes?: ProductVariant[]
 }
 
 export interface PagedResult<T> {

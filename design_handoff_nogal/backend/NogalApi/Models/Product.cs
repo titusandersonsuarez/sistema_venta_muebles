@@ -24,4 +24,5 @@ public class Product
     public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 
     public List<ProductImage> Imagenes { get; set; } = new();
+    public List<ProductVariant> Variantes { get; set; } = new();
 }

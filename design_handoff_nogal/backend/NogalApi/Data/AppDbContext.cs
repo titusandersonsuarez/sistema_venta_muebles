@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
@@ -55,11 +56,27 @@ public class AppDbContext : DbContext
                 .WithOne(i => i.Product)
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(p => p.Variantes)
+                .WithOne(v => v.Product)
+                .HasForeignKey(v => v.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ProductImage>(entity =>
         {
             entity.Property(i => i.Url).HasMaxLength(500).IsRequired();
+        });
+
+        modelBuilder.Entity<ProductVariant>(entity =>
+        {
+            entity.HasIndex(v => new { v.ProductId, v.Sku }).IsUnique();
+            entity.Property(v => v.Sku).HasMaxLength(60).IsRequired();
+            entity.Property(v => v.Nombre).HasMaxLength(100).IsRequired();
+            entity.Property(v => v.Tipo).HasMaxLength(40).IsRequired().HasDefaultValue("Madera");
+            entity.Property(v => v.CodigoColorHex).HasMaxLength(20);
+            entity.Property(v => v.PrecioAjusteCOP).HasPrecision(12, 2);
+            entity.Property(v => v.FotoUrl).HasMaxLength(500);
         });
 
         modelBuilder.Entity<Order>(entity =>

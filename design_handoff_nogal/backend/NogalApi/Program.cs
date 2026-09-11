@@ -109,6 +109,7 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAdminAsync(context, seedOptions);
     await OrderSeeder.SeedAsync(context);
     await ProductionSeeder.SeedAsync(context);
+    await DbSeeder.SeedProductVariantsAsync(context);
 }
 
 // Configure the HTTP request pipeline.

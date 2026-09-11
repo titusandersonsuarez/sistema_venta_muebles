@@ -47,6 +47,7 @@ public class ProductService : IProductService
             .Skip((pagina - 1) * tamano)
             .Take(tamano)
             .Include(p => p.Imagenes.OrderBy(i => i.Orden))
+            .Include(p => p.Variantes.Where(v => v.Activo).OrderBy(v => v.Orden))
             .ToListAsync();
 
         return new PagedResult<ProductPublicDto>
@@ -64,6 +65,7 @@ public class ProductService : IProductService
             .AsNoTracking()
             .Where(p => p.Activo && p.Slug == slug)
             .Include(p => p.Imagenes.OrderBy(i => i.Orden))
+            .Include(p => p.Variantes.Where(v => v.Activo).OrderBy(v => v.Orden))
             .FirstOrDefaultAsync();
 
         return producto is null ? null : MapPublic(producto);
@@ -85,6 +87,7 @@ public class ProductService : IProductService
             .Skip((p - 1) * t)
             .Take(t)
             .Include(pr => pr.Imagenes.OrderBy(i => i.Orden))
+            .Include(pr => pr.Variantes.OrderBy(v => v.Orden))
             .ToListAsync();
 
         return new PagedResult<ProductDto>
@@ -100,6 +103,7 @@ public class ProductService : IProductService
     {
         var producto = await _context.Products
             .Include(p => p.Imagenes.OrderBy(i => i.Orden))
+            .Include(p => p.Variantes.OrderBy(v => v.Orden))
             .FirstOrDefaultAsync(p => p.Id == id);
         return producto is null ? null : MapAdmin(producto);
     }
@@ -373,6 +377,20 @@ public class ProductService : IProductService
             Id = i.Id,
             Url = i.Url,
             Orden = i.Orden
+        }).ToList(),
+        Variantes = p.Variantes.Select(v => new ProductVariantDto
+        {
+            Id = v.Id,
+            ProductId = v.ProductId,
+            Sku = v.Sku,
+            Nombre = v.Nombre,
+            Tipo = v.Tipo,
+            CodigoColorHex = v.CodigoColorHex,
+            PrecioAjusteCOP = v.PrecioAjusteCOP,
+            FotoUrl = v.FotoUrl,
+            Stock = v.Stock,
+            Activo = v.Activo,
+            Orden = v.Orden
         }).ToList()
     };
 
@@ -400,6 +418,20 @@ public class ProductService : IProductService
             Id = i.Id,
             Url = i.Url,
             Orden = i.Orden
+        }).ToList(),
+        Variantes = p.Variantes.Where(v => v.Activo).Select(v => new ProductVariantDto
+        {
+            Id = v.Id,
+            ProductId = v.ProductId,
+            Sku = v.Sku,
+            Nombre = v.Nombre,
+            Tipo = v.Tipo,
+            CodigoColorHex = v.CodigoColorHex,
+            PrecioAjusteCOP = v.PrecioAjusteCOP,
+            FotoUrl = v.FotoUrl,
+            Stock = v.Stock,
+            Activo = v.Activo,
+            Orden = v.Orden
         }).ToList()
     };
 }

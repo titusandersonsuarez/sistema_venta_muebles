@@ -7,6 +7,33 @@ public class ProductImageDto
     public int Orden { get; set; }
 }
 
+public class ProductVariantDto
+{
+    public int Id { get; set; }
+    public int ProductId { get; set; }
+    public string Sku { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "Madera";
+    public string? CodigoColorHex { get; set; }
+    public decimal PrecioAjusteCOP { get; set; }
+    public string? FotoUrl { get; set; }
+    public int Stock { get; set; }
+    public bool Activo { get; set; }
+    public int Orden { get; set; }
+}
+
+public class CreateProductVariantDto
+{
+    public string Sku { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "Madera";
+    public string? CodigoColorHex { get; set; }
+    public decimal PrecioAjusteCOP { get; set; }
+    public string? FotoUrl { get; set; }
+    public int Stock { get; set; } = 10;
+    public int Orden { get; set; }
+}
+
 /// <summary>
 /// Representación completa (uso interno del panel). Incluye Activo y fechas.
 /// </summary>
@@ -33,6 +60,7 @@ public class ProductDto
     public DateTime FechaCreacion { get; set; }
     public DateTime FechaActualizacion { get; set; }
     public List<ProductImageDto> Imagenes { get; set; } = new();
+    public List<ProductVariantDto> Variantes { get; set; } = new();
 }
 
 /// <summary>
@@ -58,6 +86,7 @@ public class ProductPublicDto
     public string? Modelo3dError { get; set; }
     public DateTime? Modelo3dSolicitadoEn { get; set; }
     public List<ProductImageDto> Imagenes { get; set; } = new();
+    public List<ProductVariantDto> Variantes { get; set; } = new();
 }
 
 public class CreateProductDto

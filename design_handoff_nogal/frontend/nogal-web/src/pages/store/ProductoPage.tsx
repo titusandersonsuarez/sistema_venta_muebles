@@ -11,7 +11,46 @@ const monedaCOP = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0
 })
 
-const ACABADOS = ['Roble natural', 'Nogal oscuro', 'Lino crudo', 'Gris piedra']
+interface VariantOption {
+  id?: number
+  sku: string
+  nombre: string
+  tipo: string
+  codigoColorHex: string
+  precioAjusteCOP: number
+  fotoUrl?: string | null
+}
+
+const DEFAULT_ACABADOS: VariantOption[] = [
+  {
+    sku: 'ROB-NAT',
+    nombre: 'Roble natural',
+    tipo: 'Madera',
+    codigoColorHex: '#c9a063',
+    precioAjusteCOP: 0
+  },
+  {
+    sku: 'NOG-OSC',
+    nombre: 'Nogal oscuro',
+    tipo: 'Madera',
+    codigoColorHex: '#4a2c11',
+    precioAjusteCOP: 0
+  },
+  {
+    sku: 'LIN-CRU',
+    nombre: 'Lino crudo',
+    tipo: 'Tela',
+    codigoColorHex: '#ded7cb',
+    precioAjusteCOP: 80000
+  },
+  {
+    sku: 'GRP-PIE',
+    nombre: 'Gris piedra',
+    tipo: 'Tela',
+    codigoColorHex: '#7d7979',
+    precioAjusteCOP: 80000
+  }
+]
 
 export function ProductoPage() {
   const { slug = '' } = useParams<{ slug: string }>()
@@ -19,7 +58,7 @@ export function ProductoPage() {
   const [relacionados, setRelacionados] = useState<PublicProduct[]>([])
   const [cargando, setCargando] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [acabado, setAcabado] = useState(ACABADOS[0])
+  const [variante, setVariante] = useState<VariantOption>(DEFAULT_ACABADOS[0])
   const [agregado, setAgregado] = useState(false)
   const [arAbierto, setArAbierto] = useState(false)
 
@@ -33,6 +72,19 @@ export function ProductoPage() {
         const p = await productsApi.obtenerPorSlug(slug)
         if (cancelado) return
         setProducto(p)
+        if (p.variantes && p.variantes.length > 0) {
+          setVariante({
+            id: p.variantes[0].id,
+            sku: p.variantes[0].sku,
+            nombre: p.variantes[0].nombre,
+            tipo: p.variantes[0].tipo,
+            codigoColorHex: p.variantes[0].codigoColorHex || '#c9a063',
+            precioAjusteCOP: p.variantes[0].precioAjusteCOP || 0,
+            fotoUrl: p.variantes[0].fotoUrl
+          })
+        } else {
+          setVariante(DEFAULT_ACABADOS[0])
+        }
         const otros = await productsApi.listarPublico({ tamano: 20 })
         if (cancelado) return
         setRelacionados(
@@ -89,8 +141,23 @@ export function ProductoPage() {
     )
   }
 
-  const cuota = Math.round(producto.precioCOP / 12)
-  const imagenPrincipal = producto.imagenUrl ? absolutoImg(producto.imagenUrl) : null
+  const variantesDisponibles: VariantOption[] = (producto.variantes && producto.variantes.length > 0)
+    ? producto.variantes.map((v) => ({
+        id: v.id,
+        sku: v.sku,
+        nombre: v.nombre,
+        tipo: v.tipo,
+        codigoColorHex: v.codigoColorHex || '#a18262',
+        precioAjusteCOP: v.precioAjusteCOP || 0,
+        fotoUrl: v.fotoUrl
+      }))
+    : DEFAULT_ACABADOS
+
+  const precioFinal = producto.precioCOP + (variante?.precioAjusteCOP ?? 0)
+  const cuota = Math.round(precioFinal / 12)
+  const imagenPrincipal = variante?.fotoUrl
+    ? absolutoImg(variante.fotoUrl)
+    : (producto.imagenUrl ? absolutoImg(producto.imagenUrl) : null)
 
   return (
     <main
@@ -115,9 +182,11 @@ export function ProductoPage() {
             className="plate"
             style={{
               aspectRatio: '4 / 3.2',
+              position: 'relative',
               display: 'grid',
               placeItems: 'center',
               borderRadius: 'var(--radius-md)',
+              overflow: 'hidden',
               background: imagenPrincipal
                 ? `center/cover url("${imagenPrincipal}")`
                 : 'repeating-linear-gradient(135deg,#eae9e9 0 12px,#e1dedb 12px 24px)'
@@ -135,6 +204,36 @@ export function ProductoPage() {
                 {producto.nombre} — foto principal
               </span>
             )}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 12,
+                left: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                background: 'rgba(255, 255, 255, 0.92)',
+                backdropFilter: 'blur(6px)',
+                borderRadius: 'var(--radius-sm, 6px)',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                fontSize: 11,
+                color: 'var(--color-text-main, #242220)'
+              }}
+            >
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  backgroundColor: variante.codigoColorHex,
+                  border: '1px solid rgba(0,0,0,0.2)'
+                }}
+              />
+              <span>
+                <strong>{variante.nombre}</strong> ({variante.sku})
+              </span>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
             {[0, 1, 2].map((i) => {
@@ -199,8 +298,13 @@ export function ProductoPage() {
                 fontVariantNumeric: 'tabular-nums'
               }}
             >
-              {monedaCOP.format(producto.precioCOP)}
+              {monedaCOP.format(precioFinal)}
             </span>
+            {variante.precioAjusteCOP > 0 && (
+              <span className="tag tag-accent" style={{ fontSize: 11 }}>
+                +{monedaCOP.format(variante.precioAjusteCOP)} acabado seleccionado
+              </span>
+            )}
             <span className="text-muted" style={{ fontSize: 13 }}>
               IVA incluido · o {monedaCOP.format(cuota)} al mes en 12 cuotas
             </span>
@@ -214,20 +318,56 @@ export function ProductoPage() {
 
           <hr className="hr" />
 
-          <h6 style={{ marginBottom: 'var(--space-3)' }}>Acabado</h6>
-          <div className="seg" style={{ flexWrap: 'wrap' }}>
-            {ACABADOS.map((a) => (
-              <label key={a} className="seg-opt">
-                <input
-                  type="radio"
-                  name="acabado"
-                  value={a}
-                  checked={acabado === a}
-                  onChange={(e) => setAcabado(e.target.value)}
-                />
-                {a}
-              </label>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 'var(--space-3)' }}>
+            <h6 style={{ margin: 0 }}>Variante de Acabado</h6>
+            <span style={{ fontSize: 12, color: 'var(--color-accent-700)', fontWeight: 500 }}>
+              {variante.nombre} · {variante.tipo} (SKU: {variante.sku})
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))', gap: 'var(--space-2)' }}>
+            {variantesDisponibles.map((v) => {
+              const seleccionada = variante.sku === v.sku
+              return (
+                <button
+                  key={v.sku}
+                  type="button"
+                  onClick={() => setVariante(v)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-2)',
+                    padding: '8px 12px',
+                    border: seleccionada ? '2px solid var(--color-accent-700)' : '1px solid var(--color-divider)',
+                    borderRadius: 'var(--radius-md)',
+                    background: seleccionada ? 'var(--color-surface-sunken, #f8f6f3)' : '#ffffff',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      backgroundColor: v.codigoColorHex,
+                      border: '1px solid rgba(0,0,0,0.15)',
+                      flexShrink: 0,
+                      boxShadow: seleccionada ? '0 0 0 2px #ffffff, 0 0 0 3px var(--color-accent-700)' : 'none'
+                    }}
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: seleccionada ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {v.nombre}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                      {v.precioAjusteCOP > 0 ? `+${monedaCOP.format(v.precioAjusteCOP)}` : 'Base'}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
           </div>
 
           <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)', flexWrap: 'wrap' }}>
@@ -248,7 +388,7 @@ export function ProductoPage() {
             </button>
             {agregado && (
               <span className="tag tag-accent" style={{ alignSelf: 'center' }}>
-                Agregado con acabado {acabado}
+                Agregado: {producto.nombre} · {variante.nombre} ({variante.sku})
               </span>
             )}
           </div>
