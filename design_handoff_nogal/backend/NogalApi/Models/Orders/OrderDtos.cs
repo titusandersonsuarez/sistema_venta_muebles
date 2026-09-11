@@ -64,6 +64,9 @@ public class OrderListItemDto
     public string Estado { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public string ResumenProductos { get; set; } = string.Empty;
+    public string? PagoProveedor { get; set; }
+    public string? PagoTransaccionId { get; set; }
+    public DateTime? PagoActualizadoEn { get; set; }
 }
 
 public class UpdateOrderStatusDto

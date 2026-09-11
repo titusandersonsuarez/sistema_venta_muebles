@@ -40,6 +40,9 @@ export interface OrderListItem {
   estado: string
   createdAt: string
   resumenProductos: string
+  pagoProveedor?: string | null
+  pagoTransaccionId?: string | null
+  pagoActualizadoEn?: string | null
 }
 
 export interface CreateOrderItemInput {

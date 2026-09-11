@@ -274,7 +274,10 @@ public class OrderService : IOrderService
             Total = o.Total,
             Estado = o.Estado,
             CreatedAt = o.CreatedAt,
-            ResumenProductos = ResumenDeProductos(o.Items)
+            ResumenProductos = ResumenDeProductos(o.Items),
+            PagoProveedor = o.PagoProveedor,
+            PagoTransaccionId = o.PagoTransaccionId,
+            PagoActualizadoEn = o.PagoActualizadoEn
         };
     }
 

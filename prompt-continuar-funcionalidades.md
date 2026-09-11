@@ -138,6 +138,11 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
   - `pages/store/HomePage.tsx` (nuevo, sustituye `HomePlaceholder.tsx`) con las 8 secciones del prototipo: hero (kicker + h1 + lead + 2 botones + 3 cifras), "Por espacio" (links a `/catalogo?categoria=X`), "Los más pedidos" (4 productos reales), banner AR (dispara `<ArDialog />`), "Lo que cuenta la gente" (3 testimonios), 4 servicios con copy completo, contacto (`POST /api/contact`) + info del taller (Cra. 56 #17-40, WhatsApp 300 000 0000), footer 4 columnas.
   - `pages/store/CatalogoPage.tsx` ahora lee y sincroniza `?categoria=X` en la URL para permitir enlaces desde la Home.
   - Estilos: usa las clases `.home-*` ya presentes en `styles.css` (no se agregó CSS nuevo).
+- [x] **11. Cierre del loop admin de pagos** — CERRADO el 2026-09-11.
+  - `OrderListItemDto` gana `PagoProveedor`, `PagoTransaccionId`, `PagoActualizadoEn` (mapeados en `OrderService.MapListItem`).
+  - `pages/admin/PedidosPage.tsx` — el switch `tagClasePorEstado` cubre los 6 estados: `Pago confirmado` y `En taller` = accent (acción del equipo), `Entregado` = neutral (cerrado), `Pago pendiente`/`Pago rechazado`/`En ruta` = outline. Cada fila muestra una línea bajo el código con `proveedor · txnId · fecha del pago` cuando existe.
+  - El filtro por estado ya funciona con los estados nuevos (los toma de `/api/catalog/options`).
+  - Flujo admin verificado: filtrar `Pago confirmado` → ver pedidos listos para mandar a producción → cambiar estado a `En taller` con el select por fila.
 - [x] **10. Pasarela de pago Wompi (demo + scaffold real)** — CERRADO el 2026-09-11.
   - Backend:
     - `Options/WompiOptions.cs` con `Provider: "demo" | "wompi"`, `PublicKey`, `IntegritySecret`, `EventsSecret`, `CheckoutBaseUrl`, `ApiBaseUrl` (sandbox), `RedirectBaseUrl`, `DemoCheckoutBaseUrl`.

@@ -19,21 +19,32 @@ const fechaCorta = new Intl.DateTimeFormat('es-CO', {
 const TODOS = 'Todos'
 
 /**
- * Estilo del .tag por estado, siguiendo el prototipo (README §10).
+ * Estilo del .tag por estado. En taller y Pago confirmado son accent
+ * porque son los estados en los que el pedido necesita acción del
+ * equipo. Entregado es neutral (cerrado). Pendiente y rechazado son
+ * outline (esperando algo externo).
  */
 function tagClasePorEstado(estado: string): string {
   switch (estado) {
-    case 'En ruta':
-      return 'tag tag-outline'
     case 'En taller':
+    case 'Pago confirmado':
       return 'tag tag-accent'
     case 'Entregado':
       return 'tag tag-neutral'
+    case 'En ruta':
     case 'Pago pendiente':
+    case 'Pago rechazado':
     default:
       return 'tag tag-outline'
   }
 }
+
+const fechaHora = new Intl.DateTimeFormat('es-CO', {
+  day: '2-digit',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit'
+})
 
 export function PedidosPage() {
   const [pedidos, setPedidos] = useState<OrderListItem[]>([])
@@ -201,6 +212,12 @@ export function PedidosPage() {
                     <div className="text-muted" style={{ fontSize: 11 }}>
                       {fechaCorta.format(new Date(p.createdAt))}
                     </div>
+                    {p.pagoTransaccionId && (
+                      <div className="text-muted" style={{ fontSize: 10, letterSpacing: '0.02em' }}>
+                        {p.pagoProveedor} · {p.pagoTransaccionId}
+                        {p.pagoActualizadoEn && ` · ${fechaHora.format(new Date(p.pagoActualizadoEn))}`}
+                      </div>
+                    )}
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>{p.cliente}</td>
                   <td className="text-muted" style={{ whiteSpace: 'nowrap' }}>{p.ciudad}</td>
