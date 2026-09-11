@@ -14,8 +14,10 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptio
 builder.Services.Configure<AdminSeedOptions>(builder.Configuration.GetSection(AdminSeedOptions.SectionName));
 builder.Services.Configure<ImageStorageOptions>(builder.Configuration.GetSection(ImageStorageOptions.SectionName));
 builder.Services.Configure<Product3dOptions>(builder.Configuration.GetSection(Product3dOptions.SectionName));
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.SectionName));
 
 // Add services to the container.
+builder.Services.AddHttpClient();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -51,6 +53,7 @@ builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISalesService, SalesService>();
 builder.Services.AddScoped<IProductionService, ProductionService>();
+builder.Services.AddScoped<IGeminiAiService, GeminiAiService>();
 builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 builder.Services.AddSingleton<Product3dGenerationQueue>();
 builder.Services.AddSingleton<IProduct3dGenerationQueue>(services => services.GetRequiredService<Product3dGenerationQueue>());

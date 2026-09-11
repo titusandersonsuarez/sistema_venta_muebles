@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using NogalApi.Data;
 using NogalApi.Models;
@@ -8,8 +9,18 @@ namespace NogalApi.Services;
 public class CommunicationService : ICommunicationService
 {
     private readonly AppDbContext _context;
+    private readonly IGeminiAiService _geminiAiService;
+    private readonly ILogger<CommunicationService> _logger;
 
-    public CommunicationService(AppDbContext context) => _context = context;
+    public CommunicationService(
+        AppDbContext context,
+        IGeminiAiService geminiAiService,
+        ILogger<CommunicationService> logger)
+    {
+        _context = context;
+        _geminiAiService = geminiAiService;
+        _logger = logger;
+    }
 
     public async Task CrearContactoAsync(CreateContactMessageDto dto, CancellationToken cancellationToken = default)
     {
@@ -47,6 +58,49 @@ public class CommunicationService : ICommunicationService
     }
 
     private async Task<string> CrearRespuestaAsync(string mensaje, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // 1. Obtener contexto del catálogo activo de SQL Server (RAG liviano)
+            var productosActivos = await _context.Products
+                .AsNoTracking()
+                .Where(p => p.Activo)
+                .Select(p => new
+                {
+                    p.Nombre,
+                    p.Categoria,
+                    p.Material,
+                    p.PrecioCOP,
+                    p.Medidas,
+                    p.Descripcion
+                })
+                .Take(25)
+                .ToListAsync(cancellationToken);
+
+            var sb = new StringBuilder();
+            foreach (var prod in productosActivos)
+            {
+                sb.AppendLine($"- {prod.Nombre} | Categoría: {prod.Categoria} | Material: {prod.Material} | Precio: ${prod.PrecioCOP:N0} COP | Medidas: {prod.Medidas} | Info: {prod.Descripcion}");
+            }
+            var contextoCatalogo = sb.ToString();
+
+            // 2. Consultar al servicio de IA (Gemini)
+            var respuestaIa = await _geminiAiService.GenerarRespuestaAsync(mensaje, contextoCatalogo, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(respuestaIa))
+            {
+                return respuestaIa;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error al generar respuesta mediante IA. Se usará el motor basado en reglas.");
+        }
+
+        // 3. Fallback a reglas determinísticas locales
+        return await CrearRespuestaReglasAsync(mensaje, cancellationToken);
+    }
+
+    private async Task<string> CrearRespuestaReglasAsync(string mensaje, CancellationToken cancellationToken)
     {
         var texto = mensaje.ToLowerInvariant();
         if (texto.Contains("hola") || texto.Contains("buenas")) return "¡Hola! Soy Nogalito. Te ayudo con muebles, entregas, pagos y nuestro taller.";

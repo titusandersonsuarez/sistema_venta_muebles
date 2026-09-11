@@ -1,24 +1,19 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API_URL, ApiError } from '../../api/client'
-import { enviarChat, enviarContacto } from '../../api/communication'
+import { enviarContacto } from '../../api/communication'
 import { listarPublico } from '../../api/products'
 import { ArDialog } from '../../components/ArDialog'
 import type { PublicProduct } from '../../types/product'
 
 const moneda = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
 const CATEGORIAS = ['Sofás', 'Sillas', 'Mesas', 'Camas']
-const SESSION_KEY = 'nogal_chat_session'
 
 export function HomePlaceholder() {
   const [productos, setProductos] = useState<PublicProduct[]>([])
   const [contacto, setContacto] = useState({ nombre: '', contacto: '', mensaje: '' })
   const [estadoContacto, setEstadoContacto] = useState('')
-  const [chatAbierto, setChatAbierto] = useState(false)
   const [arAbierto, setArAbierto] = useState(false)
-  const [chatTexto, setChatTexto] = useState('')
-  const [chat, setChat] = useState([{ origen: 'bot', texto: 'Hola, soy Nogalito. ¿En qué te ayudo hoy?' }])
-  const [enviandoChat, setEnviandoChat] = useState(false)
 
   useEffect(() => { listarPublico({ pagina: 1, tamano: 12 }).then((r) => setProductos(r.items)).catch(() => undefined) }, [])
 
@@ -32,18 +27,6 @@ export function HomePlaceholder() {
     event.preventDefault(); setEstadoContacto('')
     try { await enviarContacto(contacto.nombre, contacto.contacto, contacto.mensaje); setContacto({ nombre: '', contacto: '', mensaje: '' }); setEstadoContacto('Gracias. Te responderemos muy pronto.') }
     catch (error) { setEstadoContacto(error instanceof ApiError ? error.message : 'No pudimos enviar tu mensaje.') }
-  }
-
-  async function enviarMensaje(event?: FormEvent, sugerido?: string) {
-    event?.preventDefault(); const texto = (sugerido ?? chatTexto).trim(); if (!texto || enviandoChat) return
-    setChat((actual) => [...actual, { origen: 'user', texto }]); setChatTexto(''); setEnviandoChat(true)
-    try {
-      const sessionId = localStorage.getItem(SESSION_KEY) ?? ''
-      const respuesta = await enviarChat(sessionId, texto)
-      localStorage.setItem(SESSION_KEY, respuesta.sessionId)
-      setChat((actual) => [...actual, { origen: 'bot', texto: respuesta.respuesta }])
-    } catch { setChat((actual) => [...actual, { origen: 'bot', texto: 'No pude responder ahora. Escríbenos al WhatsApp 300 000 0000.' }]) }
-    finally { setEnviandoChat(false) }
   }
 
   return <main className="home-page">
@@ -72,9 +55,6 @@ export function HomePlaceholder() {
     <section className="home-contact home-section" id="contacto"><form className="card" onSubmit={enviarFormulario}><p className="card-kicker">Contáctanos</p><h2>Hablemos de tu espacio</h2><label className="field">Nombre<input className="input" required value={contacto.nombre} onChange={(e) => setContacto({ ...contacto, nombre: e.target.value })} /></label><label className="field">Celular o correo<input className="input" required value={contacto.contacto} onChange={(e) => setContacto({ ...contacto, contacto: e.target.value })} /></label><label className="field">Mensaje<textarea className="input" required value={contacto.mensaje} onChange={(e) => setContacto({ ...contacto, mensaje: e.target.value })} /></label><button className="btn btn-primary" type="submit">Enviar mensaje</button>{estadoContacto && <p className="home-form-status">{estadoContacto}</p>}</form><div><div className="plate home-map"><span>Puente Aranda · Bogotá</span></div><table className="table home-address"><tbody><tr><td>Dirección</td><td>Cra. 56 #17-40, Bogotá</td></tr><tr><td>Horario</td><td>L–V 8:00–17:00 · Sáb 8:00–12:00</td></tr><tr><td>WhatsApp</td><td>300 000 0000</td></tr><tr><td>Correo</td><td>hola@nogal.com.co</td></tr></tbody></table></div></section>
 
     <footer className="home-footer"><div><h3>Nogal</h3><p>Fábrica de muebles en Puente Aranda, Bogotá.</p></div><div><h6>Comprar</h6><Link to="/catalogo">Catálogo</Link></div><div><h6>Ayuda</h6><a href="#contacto">Contacto</a></div><div><h6>Novedades</h6><input className="input" placeholder="Tu correo" /></div></footer>
-
-    <button className="home-chat-trigger btn btn-primary" onClick={() => setChatAbierto(true)}>Hablar con nosotros</button>
-    {chatAbierto && <aside className="home-chat"><header><div><strong>Nogalito</strong><span>en línea</span></div><button className="btn btn-ghost" onClick={() => setChatAbierto(false)}>Cerrar</button></header><div className="home-chat-history">{chat.map((mensaje, indice) => <p className={`home-message ${mensaje.origen}`} key={indice}>{mensaje.texto}</p>)}</div><div className="home-chat-suggestions">{['¿Cómo funciona el envío?', '¿Qué medios de pago tienen?', '¿Dónde queda el taller?'].map((texto) => <button key={texto} onClick={() => enviarMensaje(undefined, texto)}>{texto}</button>)}</div><form onSubmit={enviarMensaje}><input className="input" value={chatTexto} onChange={(e) => setChatTexto(e.target.value)} placeholder="Escribe tu pregunta" /><button className="btn btn-primary" disabled={enviandoChat}>Enviar</button></form></aside>}
     <ArDialog abierto={arAbierto} alCerrar={() => setArAbierto(false)} />
   </main>
 }

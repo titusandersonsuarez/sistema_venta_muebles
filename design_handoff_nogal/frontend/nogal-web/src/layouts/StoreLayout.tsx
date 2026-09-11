@@ -1,8 +1,9 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import { NogalitoChat } from '../components/NogalitoChat'
 
 export function StoreLayout() {
   return (
-    <div style={{ background: 'var(--color-bg)', color: 'var(--color-text)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--color-bg)', color: 'var(--color-text)', minHeight: '100vh', position: 'relative' }}>
       <header
         className="nav"
         style={{
@@ -41,6 +42,7 @@ export function StoreLayout() {
       </header>
 
       <Outlet />
+      <NogalitoChat />
     </div>
   )
 }
