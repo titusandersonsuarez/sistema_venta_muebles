@@ -9,6 +9,67 @@ El diseño cubre dos productos en un mismo dominio:
 
 Moneda: **COP** (formato `$ 1.890.000`, es-CO). Idioma: español colombiano.
 
+## Arquitectura implementada
+
+El proyecto actual utiliza una arquitectura sencilla por responsabilidades:
+
+```text
+React + TypeScript + Vite
+      ↓
+    Controllers
+      ↓
+       DTOs
+      ↓
+    IService
+      ↓
+     Services
+      ↓
+ Entity Framework Core / AppDbContext
+      ↓
+ SQL Server .\\SQLEXPRESS / NogalDb
+```
+
+- Los **Controllers** gestionan routing, HTTP, autorización, DTOs y códigos de estado.
+- Las interfaces `I*Service` definen los contratos de aplicación.
+- Los **Services** contienen las reglas de negocio, consultas, paginación, mapeo a DTOs y persistencia mediante EF Core.
+- `AppDbContext` configura entidades, relaciones, índices y restricciones.
+- Los DTOs evitan exponer directamente las entidades de Entity Framework en la API pública.
+- No se utiliza Repository Pattern: EF Core ya se consume desde los Services y no existe una necesidad técnica adicional.
+
+### Backend actual
+
+- ASP.NET Core .NET 9 y Entity Framework Core.
+- SQL Server Express local: `Server=.\\SQLEXPRESS;Database=NogalDb;Trusted_Connection=True;TrustServerCertificate=True;`.
+- Migraciones automáticas al iniciar con `Database.MigrateAsync()`.
+- JWT con BCrypt y rol `Admin` para endpoints administrativos.
+- Almacenamiento local de imágenes mediante `IProductImageStorage`.
+- Swagger/OpenAPI, CORS y archivos estáticos configurados en `Program.cs`.
+
+### Refactorización aplicada
+
+- Las validaciones de nombre, precio, categoría, material y estado de productos viven en `ProductService`.
+- `AdminProductsController` traduce los errores de validación a respuestas HTTP `400` sin contener las reglas de negocio.
+- Los endpoints de productos y pedidos administrativos requieren `[Authorize(Roles = "Admin")]`.
+- La carga de imágenes valida extensión, `Content-Type` y firma binaria básica, manteniendo el almacenamiento local y el campo multipart `archivo`.
+- Se conservaron las rutas, DTOs y nombres de propiedades consumidos por React.
+
+### Comandos de verificación
+
+Desde `backend`:
+
+```powershell
+dotnet build .\\NogalApi.sln
+```
+
+Desde `frontend/nogal-web`:
+
+```powershell
+npm install
+npm run build
+```
+
+Para ejecutar localmente, inicia la API desde `backend/NogalApi` y el frontend con `npm run dev` desde `frontend/nogal-web`. La cadena de conexión de SQL Server se encuentra en `appsettings.json` y puede sobrescribirse mediante la configuración estándar de ASP.NET Core.
+
 ## About the Design Files
 Los archivos de este paquete son **referencias de diseño hechas en HTML**: prototipos que muestran el aspecto y el comportamiento deseados, **no código de producción para copiar y pegar**.
 La tarea es **recrear estos diseños en el stack objetivo** (aquí: **React + TypeScript** en el front y **ASP.NET Core (C#)** en el back), usando los patrones y librerías de ese proyecto. El HTML sirve como especificación visual y funcional.

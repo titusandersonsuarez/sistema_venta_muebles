@@ -106,6 +106,8 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> CrearAsync(CreateProductDto dto)
     {
+        ValidarDatos(dto.Nombre, dto.Categoria, dto.Material, dto.PrecioCOP, dto.Estado);
+
         var estado = string.IsNullOrWhiteSpace(dto.Estado) ? "Disponible" : dto.Estado!;
         var slug = await GenerarSlugUnicoAsync(dto.Nombre);
 
@@ -135,6 +137,8 @@ public class ProductService : IProductService
 
     public async Task<ProductDto?> ActualizarAsync(int id, UpdateProductDto dto)
     {
+        ValidarDatos(dto.Nombre, dto.Categoria, dto.Material, dto.PrecioCOP, dto.Estado);
+
         var producto = await _context.Products
             .Include(p => p.Imagenes)
             .FirstOrDefaultAsync(p => p.Id == id);
@@ -231,6 +235,30 @@ public class ProductService : IProductService
     }
 
     private static string? Trim(string? valor) => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+
+    private static void ValidarDatos(string nombre, string categoria, string material, decimal precio, string? estado)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            throw new ProductValidationException("El nombre es obligatorio.");
+        }
+        if (precio <= 0)
+        {
+            throw new ProductValidationException("El precio debe ser mayor a cero.");
+        }
+        if (!ProductCatalogo.Categorias.Contains(categoria))
+        {
+            throw new ProductValidationException($"Categoría no válida. Usa una de: {string.Join(", ", ProductCatalogo.Categorias)}.");
+        }
+        if (!ProductCatalogo.Materiales.Contains(material))
+        {
+            throw new ProductValidationException($"Material no válido. Usa uno de: {string.Join(", ", ProductCatalogo.Materiales)}.");
+        }
+        if (!string.IsNullOrWhiteSpace(estado) && !ProductCatalogo.Estados.Contains(estado))
+        {
+            throw new ProductValidationException($"Estado no válido. Usa uno de: {string.Join(", ", ProductCatalogo.Estados)}.");
+        }
+    }
 
     private async Task<string> GenerarSlugUnicoAsync(string nombre, int? ignorarId = null)
     {

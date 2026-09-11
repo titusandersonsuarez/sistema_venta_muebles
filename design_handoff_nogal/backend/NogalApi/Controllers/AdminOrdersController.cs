@@ -7,7 +7,7 @@ namespace NogalApi.Controllers;
 
 [ApiController]
 [Route("api/admin/orders")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class AdminOrdersController : ControllerBase
 {
     private readonly IOrderService _pedidos;

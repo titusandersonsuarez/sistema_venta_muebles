@@ -9,7 +9,7 @@ namespace NogalApi.Controllers;
 
 [ApiController]
 [Route("api/admin/products")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class AdminProductsController : ControllerBase
 {
     private readonly IProductService _productos;
@@ -46,25 +46,29 @@ public class AdminProductsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CreateProductDto dto)
     {
-        if (Validar(dto.Nombre, dto.Categoria, dto.Material, dto.PrecioCOP, dto.Estado) is { } error)
+        try
         {
-            return BadRequest(new { mensaje = error });
+            var creado = await _productos.CrearAsync(dto);
+            return CreatedAtAction(nameof(Obtener), new { id = creado.Id }, creado);
         }
-
-        var creado = await _productos.CrearAsync(dto);
-        return CreatedAtAction(nameof(Obtener), new { id = creado.Id }, creado);
+        catch (ProductValidationException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Actualizar(int id, [FromBody] UpdateProductDto dto)
     {
-        if (Validar(dto.Nombre, dto.Categoria, dto.Material, dto.PrecioCOP, dto.Estado) is { } error)
+        try
         {
-            return BadRequest(new { mensaje = error });
+            var actualizado = await _productos.ActualizarAsync(id, dto);
+            return actualizado is null ? NotFound() : Ok(actualizado);
         }
-
-        var actualizado = await _productos.ActualizarAsync(id, dto);
-        return actualizado is null ? NotFound() : Ok(actualizado);
+        catch (ProductValidationException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
     }
 
     [HttpDelete("{id:int}")]
@@ -117,28 +121,4 @@ public class AdminProductsController : ControllerBase
         return actualizado is null ? NotFound() : Ok(actualizado);
     }
 
-    private static string? Validar(string nombre, string categoria, string material, decimal precio, string? estado)
-    {
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            return "El nombre es obligatorio.";
-        }
-        if (precio <= 0)
-        {
-            return "El precio debe ser mayor a cero.";
-        }
-        if (!ProductCatalogo.Categorias.Contains(categoria))
-        {
-            return $"Categoría no válida. Usa una de: {string.Join(", ", ProductCatalogo.Categorias)}.";
-        }
-        if (!ProductCatalogo.Materiales.Contains(material))
-        {
-            return $"Material no válido. Usa uno de: {string.Join(", ", ProductCatalogo.Materiales)}.";
-        }
-        if (!string.IsNullOrWhiteSpace(estado) && !ProductCatalogo.Estados.Contains(estado))
-        {
-            return $"Estado no válido. Usa uno de: {string.Join(", ", ProductCatalogo.Estados)}.";
-        }
-        return null;
-    }
 }
