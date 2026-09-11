@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,6 +51,37 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProductImage>(entity =>
         {
             entity.Property(i => i.Url).HasMaxLength(500).IsRequired();
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasIndex(o => o.Codigo).IsUnique();
+            entity.Property(o => o.Codigo).HasMaxLength(20).IsRequired();
+            entity.Property(o => o.Cliente).HasMaxLength(120).IsRequired();
+            entity.Property(o => o.Ciudad).HasMaxLength(80).IsRequired();
+            entity.Property(o => o.Estado).HasMaxLength(30).IsRequired();
+            entity.Property(o => o.Total).HasPrecision(12, 2);
+
+            entity.HasMany(o => o.Items)
+                .WithOne(i => i.Order)
+                .HasForeignKey(i => i.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrderItem>(entity =>
+        {
+            entity.Property(i => i.NombreProducto).HasMaxLength(200).IsRequired();
+            entity.Property(i => i.PrecioUnitario).HasPrecision(12, 2);
+            entity.Property(i => i.Subtotal).HasPrecision(12, 2);
+
+            // RESTRICT en Product: no queremos borrar (físicamente) un producto
+            // que aparece en pedidos históricos. Además, Products.Activo hace
+            // soft delete, así que este caso solo pasaría si alguien fuerza
+            // un DELETE manual en BD.
+            entity.HasOne(i => i.Product)
+                .WithMany()
+                .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

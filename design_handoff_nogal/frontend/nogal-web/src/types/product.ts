@@ -65,4 +65,5 @@ export interface CatalogOptions {
   categorias: string[]
   materiales: string[]
   estados: string[]
+  estadosPedido: string[]
 }

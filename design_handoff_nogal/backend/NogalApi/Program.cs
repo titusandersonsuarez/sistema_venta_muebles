@@ -47,6 +47,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");
@@ -92,6 +93,7 @@ using (var scope = app.Services.CreateScope())
 
     await context.Database.MigrateAsync();
     await DbSeeder.SeedAdminAsync(context, seedOptions);
+    await OrderSeeder.SeedAsync(context);
 }
 
 // Configure the HTTP request pipeline.

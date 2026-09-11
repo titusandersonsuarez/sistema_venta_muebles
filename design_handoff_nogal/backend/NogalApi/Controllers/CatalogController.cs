@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NogalApi.Models.Orders;
 using NogalApi.Models.Products;
 
 namespace NogalApi.Controllers;
@@ -20,7 +21,8 @@ public class CatalogController : ControllerBase
         {
             categorias = ProductCatalogo.Categorias,
             materiales = ProductCatalogo.Materiales,
-            estados = ProductCatalogo.Estados
+            estados = ProductCatalogo.Estados,
+            estadosPedido = OrderCatalogo.Estados
         });
     }
 }
