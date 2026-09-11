@@ -49,8 +49,7 @@ Trabaja un módulo a la vez, de punta a punta (migración → endpoint → panta
 ### Ubicación del proyecto
 
 - Working directory raíz: `C:\Users\USUARIO\Desktop\definitivo\`
-- Paquete Nogal (código nuevo): `C:\Users\USUARIO\Desktop\definitivo\design_handoff_nogal\`
-- Convive con proyecto viejo (`EntrevistaApi/` + `EntrevistaDesktop/`, WPF) — no relacionado con Nogal, ignorar.
+- Paquete Nogal (todo el código): `C:\Users\USUARIO\Desktop\definitivo\design_handoff_nogal\`
 
 ### Qué hace hoy el software
 
