@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository_owner }}/nogal-api
+  IMAGE_WEB: ghcr.io/${{ github.repository_owner }}/nogal-web
+
 jobs:
   backend:
     name: Backend (.NET 9)
@@ -53,30 +58,46 @@ jobs:
         run: npm run build
 
   docker:
-    name: Docker build (api + web)
+    name: Docker build & push (api + web)
     runs-on: ubuntu-latest
     needs: [backend, frontend]
+    # En PRs solo se hace build (no push). En push a main se publica a GHCR.
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build API image
+      - name: Login a GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push API image
         uses: docker/build-push-action@v5
         with:
           context: ./design_handoff_nogal/backend/NogalApi
-          push: false
-          tags: nogal-api:ci
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.IMAGE_API }}:latest
+            ${{ env.IMAGE_API }}:${{ github.sha }}
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
 
-      - name: Build Web image
+      - name: Build & push Web image
         uses: docker/build-push-action@v5
         with:
           context: ./design_handoff_nogal/frontend/nogal-web
-          push: false
-          tags: nogal-web:ci
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.IMAGE_WEB }}:latest
+            ${{ env.IMAGE_WEB }}:${{ github.sha }}
           build-args: |
             VITE_API_URL=/api
           cache-from: type=gha,scope=web
