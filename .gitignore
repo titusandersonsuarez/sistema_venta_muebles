@@ -19,3 +19,6 @@ design_handoff_nogal/backend/NogalApi/wwwroot/uploads/
 
 # Env vars locales para docker compose (.env.example es el template rastreado)
 .env
+
+# Scratch temporal (puppeteer install, etc)
+scripts/

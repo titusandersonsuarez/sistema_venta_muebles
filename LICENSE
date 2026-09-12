@@ -1,0 +1,46 @@
+Copyright (c) 2026 Anderson Suarez. All rights reserved.
+
+This repository ("Nogal") is published publicly for two purposes only:
+
+  1. As a working software system that runs the operations of a family-owned
+     furniture factory in Puente Aranda, Bogota (Colombia).
+  2. As a personal portfolio artifact showcasing the author's engineering
+     work.
+
+Publishing the source code does NOT place it under an open source license.
+No permission is granted, express or implied, to:
+
+  - copy, clone, fork for reuse, redistribute, publish, sublicense, sell,
+    lease, or otherwise exploit this code or any substantial part of it;
+  - use this code or any substantial part of it in any product, service,
+    course, tutorial, book, video, or derivative work, commercial or
+    non-commercial;
+  - remove, alter, or obscure this copyright notice or the attribution to
+    the author.
+
+The following limited uses are permitted without prior written consent,
+provided the copyright notice and author attribution remain intact:
+
+  - reading the source code online or in a local clone for personal study;
+  - quoting short excerpts (a function, a snippet, a configuration block)
+    in reviews, articles, or educational material that credit this
+    repository and its author;
+  - linking to this repository.
+
+Any other use, including but not limited to deploying a substantially
+similar system to sell furniture, requires prior written permission from
+the author, which may be granted under a separate commercial license.
+
+Third-party dependencies (NuGet packages, npm packages, fonts, and other
+libraries referenced by this project) remain under their own licenses.
+Nothing in this notice modifies those licenses.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For permission requests or commercial licensing, contact:
+titusandersonsuarez@gmail.com
