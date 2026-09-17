@@ -15,9 +15,15 @@ RUN npm run build
 
 FROM nginx:1.27-alpine AS final
 
-# Config custom: sirve la SPA con fallback a index.html y proxy /api al backend.
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Template con ${API_UPSTREAM}: envsubst nativo de la imagen lo resuelve
+# al arrancar contra el env var. Default apunta al servicio de compose;
+# en Azure Container Apps lo sobrescribimos con el FQDN interno del API.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# Restringimos envsubst a esta variable para no romper `$host`, `$uri`, etc.
+ENV NGINX_ENVSUBST_FILTER=^API_UPSTREAM$ \
+    API_UPSTREAM=http://api:8080
 
 EXPOSE 80
 
