@@ -50,7 +50,25 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
+// Storage de imágenes: Local por default, Azure Blob si ImageStorage:Provider = "azure".
+// Fallback silencioso a Local si Provider=azure pero falta ConnectionString.
+builder.Services.AddScoped<LocalProductImageStorage>();
+builder.Services.AddScoped<IProductImageStorage>(services =>
+{
+    var options = services.GetRequiredService<IOptions<ImageStorageOptions>>().Value;
+    var provider = (options.Provider ?? "local").Trim().ToLowerInvariant();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    if (provider == "azure")
+    {
+        if (string.IsNullOrWhiteSpace(options.AzureConnectionString))
+        {
+            logger.LogWarning("ImageStorage:Provider=azure pero falta AzureConnectionString. Usando storage local.");
+            return services.GetRequiredService<LocalProductImageStorage>();
+        }
+        return ActivatorUtilities.CreateInstance<AzureBlobProductImageStorage>(services);
+    }
+    return services.GetRequiredService<LocalProductImageStorage>();
+});
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ISalesService, SalesService>();
 builder.Services.AddScoped<IProductionService, ProductionService>();
