@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
+    public DbSet<Review> Reviews => Set<Review>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -159,6 +160,21 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChatMessage>(entity =>
         {
             entity.Property(m => m.Origen).HasMaxLength(10).IsRequired();
+        });
+
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.Property(r => r.Autor).HasMaxLength(120).IsRequired();
+            entity.Property(r => r.Texto).HasMaxLength(2000).IsRequired();
+            entity.HasIndex(r => new { r.ProductId, r.Aprobado });
+
+            // Cascade: si un producto se borra fisicamente (raro por soft delete),
+            // sus reseñas se van con él. En el flujo normal Products.Activo=false
+            // deja las reseñas huérfanas visibles solo en admin.
+            entity.HasOne(r => r.Product)
+                .WithMany()
+                .HasForeignKey(r => r.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<PaymentEvent>(entity =>

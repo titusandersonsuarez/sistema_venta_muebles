@@ -32,6 +32,12 @@ const MODULOS: Modulo[] = [
     nombre: 'Producción',
     titulo: 'Producción',
     subtitulo: 'Etapas del taller, capacidad e inventario de materiales.'
+  },
+  {
+    path: '/admin/reseñas',
+    nombre: 'Reseñas',
+    titulo: 'Reseñas',
+    subtitulo: 'Moderación de reseñas enviadas por los clientes.'
   }
 ]
 

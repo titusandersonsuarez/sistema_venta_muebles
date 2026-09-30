@@ -4,6 +4,7 @@ import * as productsApi from '../../api/products'
 import { API_URL, ApiError } from '../../api/client'
 import type { PublicProduct } from '../../types/product'
 import { ArDialog } from '../../components/ArDialog'
+import { ReviewsSection } from '../../components/ReviewsSection'
 import { useCart } from '../../cart/CartContext'
 
 const monedaCOP = new Intl.NumberFormat('es-CO', {
@@ -505,6 +506,8 @@ export function ProductoPage() {
           </div>
         </section>
       )}
+      <ReviewsSection slug={producto.slug} />
+
       <ArDialog abierto={arAbierto} alCerrar={() => setArAbierto(false)} producto={producto.nombre} modelo3dUrl={producto.modelo3dUrl} modeloUsdzUrl={producto.modeloUsdzUrl} />
     </main>
   )

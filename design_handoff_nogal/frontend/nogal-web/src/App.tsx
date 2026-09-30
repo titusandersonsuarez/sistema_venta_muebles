@@ -9,6 +9,7 @@ import { ResumenPage } from './pages/admin/ResumenPage'
 import { PedidosPage } from './pages/admin/PedidosPage'
 import { ProductosPage } from './pages/admin/ProductosPage'
 import { ProduccionPage } from './pages/admin/ProduccionPage'
+import { ReviewsPage } from './pages/admin/ReviewsPage'
 import { HomePage } from './pages/store/HomePage'
 import { CatalogoPage } from './pages/store/CatalogoPage'
 import { ProductoPage } from './pages/store/ProductoPage'
@@ -45,6 +46,7 @@ export function App() {
             <Route path="pedidos" element={<PedidosPage />} />
             <Route path="productos" element={<ProductosPage />} />
             <Route path="produccion" element={<ProduccionPage />} />
+            <Route path="reseñas" element={<ReviewsPage />} />
           </Route>
 
           <Route element={<StoreLayout />}>
