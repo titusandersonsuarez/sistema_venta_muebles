@@ -23,5 +23,5 @@ design_handoff_nogal/backend/NogalApi/wwwroot/uploads/
 # Secrets de despliegue en Azure (nunca subir al repo)
 .azure-secrets.local
 
-# Scratch temporal (puppeteer install, etc)
-scripts/
+# Scratch temporal (puppeteer install, etc) — solo en la raíz del repo
+/scripts/

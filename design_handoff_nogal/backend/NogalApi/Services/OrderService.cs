@@ -221,6 +221,46 @@ public class OrderService : IOrderService
         return Map(pedido);
     }
 
+    public async Task<bool> AplicarEventoPagoAsync(
+        string codigo,
+        string transactionId,
+        PagoEstadoAgregado estado,
+        DateTime eventoEmitidoEn,
+        CancellationToken cancellationToken = default)
+    {
+        var pedido = await _context.Orders.FirstOrDefaultAsync(o => o.Codigo == codigo, cancellationToken);
+        if (pedido is null) return false;
+
+        // Un evento más viejo que la última actualización del pago no debe
+        // pisar el estado actual — Wompi puede reordenar reintentos y sería
+        // muy fácil rebotar de "confirmado" a "pendiente" por un evento
+        // rezagado. En igualdad de timestamp aplicamos (para casos donde el
+        // verificar-desde-el-redirect corrió en el mismo segundo).
+        if (pedido.PagoActualizadoEn.HasValue && eventoEmitidoEn < pedido.PagoActualizadoEn.Value)
+        {
+            return false;
+        }
+
+        // Si ya está en un estado final (confirmado/rechazado) y el evento
+        // trae el mismo, no vale la pena rescribir. Evita bumps de fecha
+        // por reintentos idénticos.
+        var estadoNuevo = estado switch
+        {
+            PagoEstadoAgregado.Aprobado => OrderCatalogo.PagoConfirmado,
+            PagoEstadoAgregado.Rechazado => OrderCatalogo.PagoRechazado,
+            _ => pedido.Estado
+        };
+        if (estadoNuevo == pedido.Estado && pedido.PagoTransaccionId == transactionId)
+        {
+            return false;
+        }
+
+        AplicarResultadoPago(pedido, estado, transactionId);
+        pedido.PagoActualizadoEn = eventoEmitidoEn;
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private static void AplicarResultadoPago(Models.Order pedido, PagoEstadoAgregado estado, string transaccionId)
     {
         pedido.PagoTransaccionId = transaccionId;

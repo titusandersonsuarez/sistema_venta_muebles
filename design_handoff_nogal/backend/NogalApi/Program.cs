@@ -66,6 +66,7 @@ builder.Services.AddScoped<IProduct3dGenerationService, Product3dGenerationDispa
 builder.Services.AddScoped<DemoPaymentService>();
 builder.Services.AddScoped<WompiPaymentService>();
 builder.Services.AddScoped<IPaymentService, PaymentServiceDispatcher>();
+builder.Services.AddScoped<IWompiWebhookService, WompiWebhookService>();
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");

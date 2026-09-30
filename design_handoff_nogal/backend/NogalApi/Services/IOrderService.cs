@@ -13,4 +13,18 @@ public interface IOrderService
     Task<PagoIntencionDto?> IniciarPagoAsync(string codigo, CancellationToken cancellationToken = default);
     Task<OrderDto?> ConfirmarPagoDemoAsync(string codigo, bool aprobado, CancellationToken cancellationToken = default);
     Task<OrderDto?> VerificarPagoAsync(string codigo, string transactionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Aplica el resultado de un evento asíncrono de pasarela (webhook)
+    /// al pedido identificado por <paramref name="codigo"/>. Ignora
+    /// eventos más viejos que la última actualización del pago para no
+    /// pisar un estado ya confirmado con uno anterior que llegue tarde.
+    /// Devuelve true si el pedido cambió, false si el evento se descartó.
+    /// </summary>
+    Task<bool> AplicarEventoPagoAsync(
+        string codigo,
+        string transactionId,
+        PagoEstadoAgregado estado,
+        DateTime eventoEmitidoEn,
+        CancellationToken cancellationToken = default);
 }

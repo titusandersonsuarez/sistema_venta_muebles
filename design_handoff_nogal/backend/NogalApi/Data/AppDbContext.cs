@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<ContactMessage> ContactMessages => Set<ContactMessage>();
     public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -158,6 +159,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChatMessage>(entity =>
         {
             entity.Property(m => m.Origen).HasMaxLength(10).IsRequired();
+        });
+
+        modelBuilder.Entity<PaymentEvent>(entity =>
+        {
+            entity.Property(e => e.Proveedor).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.EventoId).HasMaxLength(80).IsRequired();
+            entity.Property(e => e.Tipo).HasMaxLength(60).IsRequired();
+            entity.Property(e => e.PedidoCodigo).HasMaxLength(20);
+            entity.Property(e => e.TransaccionId).HasMaxLength(80);
+            entity.Property(e => e.EstadoResultado).HasMaxLength(20);
+            // Idempotencia: Wompi puede reintentar el mismo evento si el
+            // webhook no responde 2xx. El índice único garantiza que
+            // aplicarlo dos veces sea imposible aún con race conditions.
+            entity.HasIndex(e => new { e.Proveedor, e.EventoId }).IsUnique();
         });
     }
 }

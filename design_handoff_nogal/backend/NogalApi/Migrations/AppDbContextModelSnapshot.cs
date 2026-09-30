@@ -251,6 +251,62 @@ namespace NogalApi.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("NogalApi.Models.PaymentEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("EstadoResultado")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("EventoEmitidoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventoId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<bool>("FirmaVerificada")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PayloadRaw")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PedidoCodigo")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Proveedor")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("RecibidoEn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("TransaccionId")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Proveedor", "EventoId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentEvents");
+                });
+
             modelBuilder.Entity("NogalApi.Models.Product", b =>
                 {
                     b.Property<int>("Id")
