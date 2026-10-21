@@ -45,9 +45,11 @@ export function AdminLayout() {
   const { usuario, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  // React Router entrega la ruta codificada (/admin/rese%C3%B1as).
+  const ruta = decodeURIComponent(location.pathname)
 
   const moduloActivo =
-    MODULOS.find((m) => (m.path === '/admin' ? location.pathname === m.path : location.pathname.startsWith(m.path))) ??
+    MODULOS.find((m) => (m.path === '/admin' ? ruta === m.path : ruta.startsWith(m.path))) ??
     MODULOS[0]
 
   async function salir() {

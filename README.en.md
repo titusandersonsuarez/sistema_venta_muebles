@@ -37,7 +37,13 @@ Currency **COP** (`$ 1.890.000`, es-CO). UI language: Colombian Spanish.
     <td><img src="docs/screenshots/08-pedidos.png" alt="Orders panel" width="400"><br><sub>Orders, with state machine and status transitions.</sub></td>
     <td><img src="docs/screenshots/09-productos.png" alt="Product CRUD" width="400"><br><sub>Products: image upload, inline editing, 3D URLs.</sub></td>
   </tr>
+  <tr>
+    <td><img src="docs/screenshots/10-produccion.png" alt="Production" width="400"><br><sub>Production: workshop stages and materials to restock.</sub></td>
+    <td><img src="docs/screenshots/11-resenas.png" alt="Review moderation" width="400"><br><sub>Customer reviews are moderated before they go live.</sub></td>
+  </tr>
 </table>
+
+> Screenshots taken with the app running locally (.NET API + PostgreSQL + React). The order in shots 04→05 is real: it is created, goes through the demo gateway and shows up in the admin panel. Product photos: Unsplash.
 
 ---
 

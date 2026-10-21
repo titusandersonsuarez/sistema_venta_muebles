@@ -238,39 +238,21 @@ export function ProductoPage() {
               </span>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
-            {[0, 1, 2].map((i) => {
-              const extra = producto.imagenes[i]
-              return (
+          {producto.imagenes.length > 1 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
+              {producto.imagenes.slice(0, 3).map((extra) => (
                 <div
-                  key={i}
+                  key={extra.url}
                   className="plate"
                   style={{
                     aspectRatio: '1 / 1',
-                    display: 'grid',
-                    placeItems: 'center',
                     borderRadius: 'var(--radius-md)',
-                    background: extra
-                      ? `center/cover url("${absolutoImg(extra.url)}")`
-                      : 'repeating-linear-gradient(135deg,#eae9e9 0 8px,#e1dedb 8px 16px)'
+                    background: `center/cover url("${absolutoImg(extra.url)}")`
                   }}
-                >
-                  {!extra && (
-                    <span
-                      style={{
-                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                        fontSize: 9,
-                        letterSpacing: '0.06em',
-                        color: '#7d7979'
-                      }}
-                    >
-                      detalle {i + 1}
-                    </span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ maxWidth: '34em' }}>

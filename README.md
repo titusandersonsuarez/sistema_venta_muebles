@@ -37,7 +37,13 @@ Moneda **COP** (`$ 1.890.000`, es-CO). Idioma: español colombiano.
     <td><img src="docs/screenshots/08-pedidos.png" alt="Panel de pedidos" width="400"><br><sub>Pedidos, con estados y cambio de flujo.</sub></td>
     <td><img src="docs/screenshots/09-productos.png" alt="CRUD de productos" width="400"><br><sub>Productos: subida de imagen, edición inline, URLs 3D.</sub></td>
   </tr>
+  <tr>
+    <td><img src="docs/screenshots/10-produccion.png" alt="Producción" width="400"><br><sub>Producción: etapas del taller y materiales por reponer.</sub></td>
+    <td><img src="docs/screenshots/11-resenas.png" alt="Moderación de reseñas" width="400"><br><sub>Las reseñas de clientes se moderan antes de publicarse.</sub></td>
+  </tr>
 </table>
+
+> Capturas tomadas con la app corriendo en local (API .NET + PostgreSQL + React). El pedido de la captura 04→05 es real: se crea, pasa por la pasarela demo y aparece en el panel. Fotos de producto: Unsplash.
 
 ---
 

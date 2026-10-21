@@ -3,8 +3,12 @@ import { Link } from 'react-router-dom'
 import { API_URL, ApiError } from '../../api/client'
 import { enviarContacto } from '../../api/communication'
 import { listarPublico } from '../../api/products'
+import { listarPorSlug } from '../../api/reviews'
 import { ArDialog } from '../../components/ArDialog'
 import type { PublicProduct } from '../../types/product'
+import type { Review } from '../../types/review'
+
+type ReseñaDestacada = Review & { producto: string }
 
 const monedaCOP = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -14,27 +18,6 @@ const monedaCOP = new Intl.NumberFormat('es-CO', {
 
 const CATEGORIAS = ['Sofás', 'Sillas', 'Mesas', 'Camas'] as const
 const ENVIO_DESDE = 500_000
-
-const TESTIMONIOS = [
-  {
-    estrellas: '★★★★★',
-    texto: '“La mesa llegó impecable y el acabado es aún más bonito que en las fotos. Se nota que la hicieron a mano.”',
-    autor: 'Camila',
-    producto: 'Mesa Sáchica'
-  },
-  {
-    estrellas: '★★★★★',
-    texto: '“Nos ajustaron las medidas del sofá para que cupiera exacto en la sala. Coordinaron el armado sin problema.”',
-    autor: 'Andrés',
-    producto: 'Sofá Liena'
-  },
-  {
-    estrellas: '★★★★★',
-    texto: '“Entrega puntual, empaque cuidadoso y una cama sólida como para muchos años.”',
-    autor: 'María',
-    producto: 'Cama Arrayán'
-  }
-]
 
 const SERVICIOS = [
   {
@@ -61,6 +44,7 @@ export function HomePage() {
   const [estadoContacto, setEstadoContacto] = useState('')
   const [enviandoContacto, setEnviandoContacto] = useState(false)
   const [arAbierto, setArAbierto] = useState(false)
+  const [reseñas, setReseñas] = useState<ReseñaDestacada[]>([])
 
   useEffect(() => {
     listarPublico({ pagina: 1, tamano: 24 })
@@ -77,7 +61,38 @@ export function HomePage() {
     return mapa
   }, [productos])
 
+  // Primera foto real por categoría, para no mostrar recuadros vacíos.
+  const fotoPorCategoria = useMemo(() => {
+    const mapa = new Map<string, PublicProduct>()
+    for (const p of productos) {
+      if (p.imagenUrl && !mapa.has(p.categoria)) mapa.set(p.categoria, p)
+    }
+    return mapa
+  }, [productos])
+
+  const portada = fotoPorCategoria.get('Sofás') ?? productos.find(p => p.imagenUrl)
+
   const destacados = productos.slice(0, 4)
+
+  // Reseñas reales (aprobadas en el panel) de los productos destacados.
+  useEffect(() => {
+    if (destacados.length === 0) return
+    Promise.all(
+      destacados.map(p =>
+        listarPorSlug(p.slug)
+          .then(rs => rs.map(r => ({ ...r, producto: p.nombre })))
+          .catch(() => [] as ReseñaDestacada[])
+      )
+    ).then(listas =>
+      setReseñas(
+        listas
+          .flat()
+          .sort((x, y) => y.rating - x.rating)
+          .slice(0, 3)
+      )
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productos])
 
   async function enviarFormulario(event: FormEvent) {
     event.preventDefault()
@@ -122,8 +137,8 @@ export function HomePage() {
           </div>
           <div className="home-figures">
             <div>
-              <strong>4,8/5</strong>
-              <span>2.140 reseñas</span>
+              <strong>{productos.length || '—'}</strong>
+              <span>muebles en catálogo</span>
             </div>
             <div>
               <strong>10 años</strong>
@@ -135,9 +150,15 @@ export function HomePage() {
             </div>
           </div>
         </div>
-        <figure className="plate home-photo">
-          <figcaption>sala con sofá Liena — foto principal</figcaption>
-        </figure>
+        {portada?.imagenUrl ? (
+          <Link to={`/producto/${portada.slug}`} className="plate home-photo has-img">
+            <img src={imagenAbsoluta(portada.imagenUrl)} alt={portada.nombre} />
+          </Link>
+        ) : (
+          <figure className="plate home-photo">
+            <figcaption>Fotos del taller próximamente</figcaption>
+          </figure>
+        )}
       </section>
 
       <section className="home-section">
@@ -155,7 +176,14 @@ export function HomePage() {
                 className="home-category"
               >
                 <div className="plate home-category-photo">
-                  <span>{categoria.toLowerCase()}</span>
+                  {fotoPorCategoria.get(categoria)?.imagenUrl ? (
+                    <img
+                      src={imagenAbsoluta(fotoPorCategoria.get(categoria)!.imagenUrl!)}
+                      alt={categoria}
+                    />
+                  ) : (
+                    <span>{categoria.toLowerCase()}</span>
+                  )}
                 </div>
                 <div
                   style={{
@@ -210,7 +238,7 @@ export function HomePage() {
                 </strong>
               </div>
               <p className="text-muted" style={{ fontSize: 12, margin: 0 }}>
-                ★★★★★ · Despacho en 5 días
+                {producto.material} · Despacho en 5 días
               </p>
             </Link>
           ))}
@@ -241,30 +269,40 @@ export function HomePage() {
             Probar con la cámara
           </button>
         </div>
-        <div className="plate home-ar-photo">
-          <span>captura de AR en una sala real</span>
-        </div>
+        {portada?.imagenUrl ? (
+          <div className="plate home-ar-photo has-img">
+            <img src={imagenAbsoluta(portada.imagenUrl)} alt={`${portada.nombre} en una sala`} />
+            <span className="home-ar-badge">AR · {portada.nombre}</span>
+          </div>
+        ) : (
+          <div className="plate home-ar-photo">
+            <span>Vista en realidad aumentada</span>
+          </div>
+        )}
       </section>
 
-      <section className="home-section">
-        <h2>Lo que cuenta la gente</h2>
-        <div className="home-review-grid" style={{ marginTop: 'var(--space-4)' }}>
-          {TESTIMONIOS.map(t => (
-            <figure key={t.autor}>
-              <div
-                aria-hidden
-                style={{ color: 'var(--color-accent-700)', fontSize: 13, letterSpacing: '0.1em' }}
-              >
-                {t.estrellas}
-              </div>
-              <blockquote>{t.texto}</blockquote>
-              <footer>
-                {t.autor} · {t.producto}
-              </footer>
-            </figure>
-          ))}
-        </div>
-      </section>
+      {reseñas.length > 0 && (
+        <section className="home-section">
+          <h2>Lo que cuenta la gente</h2>
+          <div className="home-review-grid" style={{ marginTop: 'var(--space-4)' }}>
+            {reseñas.map(r => (
+              <figure key={r.id}>
+                <div
+                  aria-label={`${r.rating} de 5`}
+                  style={{ color: 'var(--color-accent-700)', fontSize: 13, letterSpacing: '0.1em' }}
+                >
+                  {'★'.repeat(r.rating)}
+                  {'☆'.repeat(5 - r.rating)}
+                </div>
+                <blockquote>“{r.texto}”</blockquote>
+                <footer>
+                  {r.autor} · {r.producto}
+                </footer>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="home-section">
         <div className="home-service-grid">
@@ -335,9 +373,13 @@ export function HomePage() {
         <div>
           <p className="home-kicker">Dónde estamos</p>
           <h2 style={{ marginTop: 'var(--space-2)' }}>Taller y punto de retiro</h2>
-          <div className="plate home-map" style={{ marginBottom: 'var(--space-4)' }}>
-            <span>mapa · Puente Aranda, Bogotá</span>
-          </div>
+          <iframe
+            className="plate home-map"
+            style={{ marginBottom: 'var(--space-4)', width: '100%', border: 0 }}
+            title="Mapa del taller en Puente Aranda, Bogotá"
+            loading="lazy"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-74.1195%2C4.6195%2C-74.1035%2C4.6315&layer=mapnik&marker=4.6255%2C-74.1115"
+          />
           <table className="table home-address">
             <tbody>
               <tr>
