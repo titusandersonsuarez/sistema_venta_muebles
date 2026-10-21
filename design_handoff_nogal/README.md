@@ -194,7 +194,7 @@ Respuestas por palabras clave: envío/entrega, precios, garantía, armado, ubica
 
 ### 7. Login del panel
 Tarjeta centrada 380px: kicker "Acceso interno", h2 "Panel de la fábrica", campos Usuario y Contraseña, mensaje de error en acento con borde izquierdo, botón "Entrar" `.btn-block`.
-Demo del prototipo: `admin` / `nogal2026` (reemplazar por auth real).
+El prototipo HTML trae un login simulado solo para navegar el diseño; la API real usa JWT y la contraseña se define con `AdminSeed__Password`.
 
 ### 8. Panel — shell
 `main` flex: **rail lateral** (`flex:1 1 210px; max-width:236px`, borde derecho hairline, sticky top 64px) con marca "Nogal / Panel de fábrica", lista de módulos (Resumen, Pedidos, Productos, Producción) con contador a la derecha y activo = borde acento + fondo `--color-accent-100`, y abajo "Ver la tienda" / "Cerrar sesión".

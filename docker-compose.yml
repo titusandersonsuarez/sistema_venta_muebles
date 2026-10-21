@@ -30,6 +30,8 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=nogal;Username=nogal;Password=${POSTGRES_PASSWORD:-nogal}"
       # Sobrescribe la key demo del appsettings — necesaria en prod real.
       Jwt__Key: ${JWT_KEY:-CAMBIA_ESTA_LLAVE_POR_UNA_DE_AL_MENOS_32_CARACTERES_LARGA}
+      # Contraseña del admin inicial. Si se deja vacía, la API genera una y la muestra en el log.
+      AdminSeed__Password: ${ADMIN_PASSWORD:-}
       Cors__AllowedOrigins__0: "http://localhost"
       Cors__AllowedOrigins__1: "http://localhost:8080"
       # El frontend nginx proxea todo, así que estos redirects deben apuntar al mismo host.

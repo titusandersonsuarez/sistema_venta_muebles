@@ -129,7 +129,7 @@ using (var scope = app.Services.CreateScope())
     var seedOptions = scope.ServiceProvider.GetRequiredService<IOptions<AdminSeedOptions>>().Value;
 
     await context.Database.MigrateAsync();
-    await DbSeeder.SeedAdminAsync(context, seedOptions);
+    await DbSeeder.SeedAdminAsync(context, seedOptions, app.Logger);
     await OrderSeeder.SeedAsync(context);
     await ProductionSeeder.SeedAsync(context);
     await DbSeeder.SeedProductVariantsAsync(context);

@@ -121,11 +121,6 @@ export function LoginPage() {
           {enviando ? 'Entrando…' : 'Entrar'}
         </button>
 
-        {import.meta.env.DEV && (
-          <p className="text-muted" style={{ fontSize: 11, margin: 0, textAlign: 'center' }}>
-            Demo (solo en desarrollo): admin / nogal2026
-          </p>
-        )}
       </form>
     </main>
   )

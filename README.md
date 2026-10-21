@@ -79,7 +79,13 @@ Moneda **COP** (`$ 1.890.000`, es-CO). Idioma: español colombiano.
 | Home real, contacto y chat Nogalito | Cerrado | Persistencia e historial en BD |
 | Auth JWT en cookie `HttpOnly` | Cerrado | Rol `Admin` para endpoints administrativos |
 
-Roadmap pendiente y contexto de negocio en [`prompt-continuar-funcionalidades.md`](prompt-continuar-funcionalidades.md).
+### Próximos pasos
+
+- Webhook de Wompi con validación de firma y despliegue con HTTPS público para pasar a pagos reales.
+- Imágenes y modelos 3D en almacenamiento de objetos (S3 / Azure Blob) en lugar del disco del contenedor.
+- Reseñas de clientes con moderación desde el panel.
+- Generación automática de modelos 3D con Meshy (el adaptador ya está; falta la credencial).
+- Pruebas automatizadas del backend.
 
 ---
 
@@ -146,7 +152,7 @@ npm run dev
 # Vite en http://localhost:5173, proxy hacia :5199
 ```
 
-Credenciales iniciales del panel se siembran desde `AdminSeed` en `appsettings.json`. Cámbialas en cualquier entorno real.
+El usuario admin inicial se crea la primera vez que arranca la API. Su contraseña se define con la variable `AdminSeed__Password` (o `ADMIN_PASSWORD` en el `.env` de Docker); si no se define, la API genera una aleatoria y la muestra una sola vez en el log.
 
 ---
 

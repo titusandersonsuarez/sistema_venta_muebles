@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NogalApi.Models;
 using NogalApi.Options;
 
@@ -10,17 +11,26 @@ public static class DbSeeder
     /// Crea el primer usuario administrador si todavía no existe ninguno.
     /// Así el panel siempre tiene con quién entrar en un ambiente nuevo.
     /// </summary>
-    public static async Task SeedAdminAsync(AppDbContext context, AdminSeedOptions seed)
+    public static async Task SeedAdminAsync(AppDbContext context, AdminSeedOptions seed, ILogger logger)
     {
         if (await context.Usuarios.AnyAsync())
         {
             return;
         }
 
+        var password = seed.Password;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            password = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(12));
+            logger.LogWarning(
+                "No se definió AdminSeed__Password. Se creó el usuario '{Usuario}' con la contraseña temporal: {Password}. Cámbiala al entrar.",
+                seed.NombreUsuario, password);
+        }
+
         context.Usuarios.Add(new Usuario
         {
             NombreUsuario = seed.NombreUsuario,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(seed.Password),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             Nombre = seed.Nombre,
             Rol = "Admin",
             Activo = true

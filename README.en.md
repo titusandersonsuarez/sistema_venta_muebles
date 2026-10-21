@@ -79,7 +79,13 @@ Currency **COP** (`$ 1.890.000`, es-CO). UI language: Colombian Spanish.
 | Real home, contact form, "Nogalito" chat | Done | Persistence and history in DB |
 | JWT auth in `HttpOnly` cookie | Done | `Admin` role for admin endpoints |
 
-Roadmap and business context in [`prompt-continuar-funcionalidades.md`](prompt-continuar-funcionalidades.md).
+### Next steps
+
+- Wompi webhook with signature validation and public HTTPS deployment to enable live payments.
+- Product images and 3D models in object storage (S3 / Azure Blob) instead of the container disk.
+- Customer reviews with moderation from the admin panel.
+- Automatic 3D model generation with Meshy (adapter ready; credential pending).
+- Automated backend tests.
 
 ---
 
@@ -146,7 +152,7 @@ npm run dev
 # Vite at http://localhost:5173, proxying to :5199
 ```
 
-Initial admin credentials are seeded from `AdminSeed` in `appsettings.json`. Change them for any real deployment.
+The initial admin user is created on first start. Set its password with `AdminSeed__Password` (or `ADMIN_PASSWORD` in the Docker `.env`); if unset, the API generates a random one and prints it once to the log.
 
 ---
 
