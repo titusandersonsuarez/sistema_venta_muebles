@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: design_handoff_nogal/backend/NogalApi
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -27,17 +27,20 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore NogalApi.sln
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build NogalApi.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test NogalApi.sln --configuration Release --no-build --logger "console;verbosity=normal"
 
   frontend:
     name: Frontend (Vite + TypeScript)
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: design_handoff_nogal/frontend/nogal-web
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +49,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: design_handoff_nogal/frontend/nogal-web/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install
         run: npm ci
@@ -82,7 +85,7 @@ jobs:
       - name: Build & push API image
         uses: docker/build-push-action@v5
         with:
-          context: ./design_handoff_nogal/backend/NogalApi
+          context: ./backend/NogalApi
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: |
             ${{ env.IMAGE_API }}:latest
@@ -93,7 +96,7 @@ jobs:
       - name: Build & push Web image
         uses: docker/build-push-action@v5
         with:
-          context: ./design_handoff_nogal/frontend/nogal-web
+          context: ./frontend
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: |
             ${{ env.IMAGE_WEB }}:latest

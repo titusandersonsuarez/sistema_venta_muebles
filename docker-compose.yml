@@ -19,7 +19,7 @@ services:
 
   api:
     build:
-      context: ./design_handoff_nogal/backend/NogalApi
+      context: ./backend/NogalApi
       dockerfile: Dockerfile
     container_name: nogal-api
     depends_on:
@@ -45,7 +45,7 @@ services:
 
   web:
     build:
-      context: ./design_handoff_nogal/frontend/nogal-web
+      context: ./frontend
       dockerfile: Dockerfile
       args:
         # El build se hace con /api relativo — nginx del contenedor proxea al servicio api.

@@ -58,7 +58,10 @@ Moneda **COP** (`$ 1.890.000`, es-CO). Idioma: español colombiano.
 
 **Infra**
 - `docker compose` — Postgres + API + Nginx sirviendo el build de Vite
-- **GitHub Actions**: build .NET, typecheck + build Vite, build de imágenes Docker con caché
+- **GitHub Actions**: build y pruebas .NET, typecheck + build Vite, imágenes Docker publicadas en GHCR
+
+**Pruebas**
+- xUnit + EF Core InMemory: pedidos (precios en servidor, envío, variantes), webhook de Wompi (firma, payloads inválidos), reseñas y validación de imágenes
 
 ---
 
@@ -70,22 +73,23 @@ Moneda **COP** (`$ 1.890.000`, es-CO). Idioma: español colombiano.
 | Ficha de producto + variantes de acabado | Cerrado | Precio y stock por variante |
 | Carrito y checkout | Cerrado | Estado en servidor por sesión |
 | **Pasarela Wompi (modo demo integrado)** | Cerrado | `IPaymentService` con dispatcher Demo/Wompi |
+| Webhook de Wompi | Cerrado | Validación de firma SHA-256, idempotencia y eventos guardados para auditoría |
 | Visor AR 3D por producto | Cerrado | GLB/GLTF + USDZ, `model-viewer` oficial |
 | Generación 3D image-to-3D (cola) | Scaffold | Adaptador Meshy listo, falta credencial real |
 | Panel — Resumen (dashboard) | Cerrado | Rango de fechas, granularidad día/semana/mes, mezcla por categoría, top 5 |
 | Panel — Pedidos | Cerrado | Cambio de estado, ciclo de pagos cerrado |
 | Panel — Productos (CRUD) | Cerrado | Multipart para imágenes, validación de firma binaria |
+| Imágenes en Azure Blob Storage | Cerrado | Opcional por configuración; disco local por defecto |
+| Reseñas con moderación | Cerrado | Públicas solo tras aprobación desde el panel |
 | Panel — Producción e inventario | Cerrado | Etapas, capacidad, materiales por reponer |
 | Home real, contacto y chat Nogalito | Cerrado | Persistencia e historial en BD |
 | Auth JWT en cookie `HttpOnly` | Cerrado | Rol `Admin` para endpoints administrativos |
 
 ### Próximos pasos
 
-- Webhook de Wompi con validación de firma y despliegue con HTTPS público para pasar a pagos reales.
-- Imágenes y modelos 3D en almacenamiento de objetos (S3 / Azure Blob) en lugar del disco del contenedor.
-- Reseñas de clientes con moderación desde el panel.
+- Despliegue con HTTPS público para activar Wompi en producción.
 - Generación automática de modelos 3D con Meshy (el adaptador ya está; falta la credencial).
-- Pruebas automatizadas del backend.
+- Pruebas del frontend.
 
 ---
 
@@ -113,7 +117,7 @@ React + TypeScript + Vite   ──►   Controllers (HTTP, DTOs, [Authorize])
 - Migraciones se aplican automáticamente al iniciar con `Database.MigrateAsync()`.
 - Fechas: el dominio se interpreta en calendario **Bogotá** y se convierte a UTC antes de tocar Postgres.
 
-Detalle completo de pantallas, tokens y contratos en [`design_handoff_nogal/README.md`](design_handoff_nogal/README.md).
+Detalle completo de pantallas, tokens y contratos en [`docs/design/README.md`](docs/design/README.md).
 
 ---
 
@@ -140,13 +144,13 @@ Requisitos: **.NET 9 SDK**, **Node 20+**, **Postgres 16** local (o el contenedor
 
 ```powershell
 # Backend
-cd design_handoff_nogal\backend\NogalApi
+cd backend\NogalApi
 dotnet restore
 dotnet run
 # API en http://localhost:5199
 
 # Frontend (otra terminal)
-cd design_handoff_nogal\frontend\nogal-web
+cd frontend
 npm install
 npm run dev
 # Vite en http://localhost:5173, proxy hacia :5199
@@ -159,12 +163,12 @@ El usuario admin inicial se crea la primera vez que arranca la API. Su contrase�
 ## Verificación
 
 ```powershell
-# Backend
-cd design_handoff_nogal\backend\NogalApi
-dotnet build .\NogalApi.sln
+# Backend: compila y corre las pruebas
+cd backend
+dotnet test .\NogalApi.sln
 
 # Frontend
-cd design_handoff_nogal\frontend\nogal-web
+cd frontend
 npm run build
 ```
 
@@ -175,14 +179,14 @@ CI corre lo mismo en cada push a `main` y en cada PR (`.github/workflows/ci.yml`
 ## Estructura
 
 ```
-definitivo/
-├── design_handoff_nogal/
-│   ├── backend/NogalApi/       # ASP.NET Core 9 + EF Core + Postgres
-│   ├── frontend/nogal-web/     # React 18 + Vite + TypeScript
-│   ├── Nogal Muebles.dc.html   # Prototipo de diseño (fuente visual de verdad)
-│   ├── styles.css              # Sistema "Classical" (tokens + componentes)
-│   ├── sistema-classical.md    # Guía escrita del sistema de diseño
-│   └── README.md               # Spec funcional pantalla por pantalla
+sistema_venta_muebles/
+├── backend/
+│   ├── NogalApi/               # ASP.NET Core 9 + EF Core + Postgres
+│   ├── NogalApi.Tests/         # Pruebas xUnit
+│   └── NogalApi.sln
+├── frontend/                   # React 18 + Vite + TypeScript
+├── scripts/                    # Pruebas end-to-end en PowerShell contra la API
+├── docs/design/                # Prototipo, sistema de diseño y spec pantalla por pantalla
 ├── docker-compose.yml
 ├── .env.example
 ├── .github/workflows/ci.yml

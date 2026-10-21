@@ -58,7 +58,10 @@ Currency **COP** (`$ 1.890.000`, es-CO). UI language: Colombian Spanish.
 
 **Infra**
 - `docker compose` — Postgres + API + Nginx serving the Vite build
-- **GitHub Actions**: .NET build, Vite typecheck + build, Docker image builds with cache
+- **GitHub Actions**: .NET build and tests, Vite typecheck + build, Docker images published to GHCR
+
+**Tests**
+- xUnit + EF Core InMemory: orders (server-side pricing, shipping, variants), Wompi webhook (signature, invalid payloads), reviews and image validation
 
 ---
 
@@ -70,22 +73,23 @@ Currency **COP** (`$ 1.890.000`, es-CO). UI language: Colombian Spanish.
 | Product page + finish variants | Done | Price and stock per variant |
 | Cart and checkout | Done | Server-side session state |
 | **Wompi payment gateway (demo mode wired end-to-end)** | Done | `IPaymentService` with a Demo/Wompi dispatcher |
+| Wompi webhook | Done | SHA-256 signature validation, idempotency and stored events for auditing |
 | Per-product AR 3D viewer | Done | GLB/GLTF + USDZ, official `model-viewer` |
 | Image-to-3D generation (queued) | Scaffold | Meshy adapter in place, real credentials pending |
 | Admin — Dashboard | Done | Date range, day/week/month granularity, category mix, top 5 |
 | Admin — Orders | Done | Status transitions, payment lifecycle closed |
 | Admin — Products (CRUD) | Done | Multipart image upload, binary signature validation |
+| Images on Azure Blob Storage | Done | Optional via configuration; local disk by default |
+| Moderated reviews | Done | Public only after approval from the admin panel |
 | Admin — Production and inventory | Done | Stages, capacity, materials to restock |
 | Real home, contact form, "Nogalito" chat | Done | Persistence and history in DB |
 | JWT auth in `HttpOnly` cookie | Done | `Admin` role for admin endpoints |
 
 ### Next steps
 
-- Wompi webhook with signature validation and public HTTPS deployment to enable live payments.
-- Product images and 3D models in object storage (S3 / Azure Blob) instead of the container disk.
-- Customer reviews with moderation from the admin panel.
+- Public HTTPS deployment to enable live Wompi payments.
 - Automatic 3D model generation with Meshy (adapter ready; credential pending).
-- Automated backend tests.
+- Frontend tests.
 
 ---
 
@@ -113,7 +117,7 @@ React + TypeScript + Vite   ──►   Controllers (HTTP, DTOs, [Authorize])
 - Migrations run automatically at startup via `Database.MigrateAsync()`.
 - Dates: the domain is interpreted in **Bogotá calendar** and converted to UTC before hitting Postgres.
 
-Full screen-by-screen spec, tokens and contracts in [`design_handoff_nogal/README.md`](design_handoff_nogal/README.md).
+Full screen-by-screen spec, tokens and contracts in [`docs/design/README.md`](docs/design/README.md).
 
 ---
 
@@ -140,13 +144,13 @@ Requirements: **.NET 9 SDK**, **Node 20+**, **Postgres 16** running locally (or 
 
 ```powershell
 # Backend
-cd design_handoff_nogal\backend\NogalApi
+cd backend\NogalApi
 dotnet restore
 dotnet run
 # API at http://localhost:5199
 
 # Frontend (separate terminal)
-cd design_handoff_nogal\frontend\nogal-web
+cd frontend
 npm install
 npm run dev
 # Vite at http://localhost:5173, proxying to :5199
@@ -159,12 +163,12 @@ The initial admin user is created on first start. Set its password with `AdminSe
 ## Verification
 
 ```powershell
-# Backend
-cd design_handoff_nogal\backend\NogalApi
-dotnet build .\NogalApi.sln
+# Backend: build and run the tests
+cd backend
+dotnet test .\NogalApi.sln
 
 # Frontend
-cd design_handoff_nogal\frontend\nogal-web
+cd frontend
 npm run build
 ```
 
@@ -175,14 +179,14 @@ CI runs the same on every push to `main` and every PR (`.github/workflows/ci.yml
 ## Structure
 
 ```
-definitivo/
-├── design_handoff_nogal/
-│   ├── backend/NogalApi/       # ASP.NET Core 9 + EF Core + Postgres
-│   ├── frontend/nogal-web/     # React 18 + Vite + TypeScript
-│   ├── Nogal Muebles.dc.html   # Design prototype (visual source of truth)
-│   ├── styles.css              # "Classical" system (tokens + components)
-│   ├── sistema-classical.md    # Written design system guide
-│   └── README.md               # Screen-by-screen functional spec
+sistema_venta_muebles/
+├── backend/
+│   ├── NogalApi/               # ASP.NET Core 9 + EF Core + Postgres
+│   ├── NogalApi.Tests/         # xUnit tests
+│   └── NogalApi.sln
+├── frontend/                   # React 18 + Vite + TypeScript
+├── scripts/                    # End-to-end PowerShell checks against the API
+├── docs/design/                # Prototype, design system and screen-by-screen spec
 ├── docker-compose.yml
 ├── .env.example
 ├── .github/workflows/ci.yml
