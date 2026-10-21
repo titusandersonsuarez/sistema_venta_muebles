@@ -14,7 +14,7 @@
 param(
     [string]$ApiBase = 'http://localhost:5199',
     [string]$AdminUser = 'admin',
-    [string]$AdminPass = 'nogal2026'
+    [Parameter(Mandatory = $true)][string]$AdminPass
 )
 
 $ErrorActionPreference = 'Stop'
