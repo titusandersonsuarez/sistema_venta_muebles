@@ -136,6 +136,7 @@ export function NogalitoChat() {
               value={chatTexto}
               onChange={(e) => setChatTexto(e.target.value)}
               placeholder="Pregúntame sobre un mueble o madera..."
+              maxLength={500}
               disabled={enviandoChat}
               autoFocus
             />

@@ -26,6 +26,8 @@ public class WebhooksController : ControllerBase
     /// configuración del secreto de eventos. Wompi reintenta ante no-2xx.
     /// </summary>
     [HttpPost("wompi")]
+    // Los eventos de Wompi pesan unos pocos KB; sin límite Kestrel acepta 30 MB.
+    [RequestSizeLimit(64 * 1024)]
     public async Task<IActionResult> Wompi(CancellationToken cancellationToken)
     {
         // Leemos el body como texto crudo — la firma se calcula sobre los

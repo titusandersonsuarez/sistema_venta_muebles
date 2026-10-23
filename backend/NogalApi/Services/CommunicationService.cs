@@ -31,6 +31,8 @@ public class CommunicationService : ICommunicationService
             throw new CommunicationValidationException("Nombre, contacto y mensaje son obligatorios.");
         if (nombre.Length > 120 || contacto.Length > 120)
             throw new CommunicationValidationException("Nombre y contacto pueden tener máximo 120 caracteres.");
+        if (mensaje.Length > 4000)
+            throw new CommunicationValidationException("El mensaje puede tener máximo 4.000 caracteres.");
 
         _context.ContactMessages.Add(new ContactMessage { Nombre = nombre, Contacto = contacto, Mensaje = mensaje });
         await _context.SaveChangesAsync(cancellationToken);
@@ -40,7 +42,8 @@ public class CommunicationService : ICommunicationService
     {
         var texto = dto.Mensaje.Trim();
         if (texto.Length == 0) throw new CommunicationValidationException("Escribe un mensaje para continuar.");
-        if (texto.Length > 2000) throw new CommunicationValidationException("El mensaje puede tener máximo 2.000 caracteres.");
+        // Cada mensaje viaja a Gemini junto con el catálogo: limitar tokens de entrada.
+        if (texto.Length > 500) throw new CommunicationValidationException("El mensaje puede tener máximo 500 caracteres.");
 
         var sessionId = Guid.TryParse(dto.SessionId, out var sessionGuid) ? sessionGuid.ToString() : Guid.NewGuid().ToString();
         var sesion = await _context.ChatSessions.FirstOrDefaultAsync(s => s.SessionId == sessionId, cancellationToken);

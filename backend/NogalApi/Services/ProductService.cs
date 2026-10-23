@@ -411,7 +411,8 @@ public class ProductService : IProductService
         Modelo3dUrl = p.Modelo3dUrl,
         ModeloUsdzUrl = p.ModeloUsdzUrl,
         Modelo3dEstado = p.Modelo3dEstado,
-        Modelo3dError = p.Modelo3dError,
+        // El detalle del error (respuesta cruda de Meshy, rutas) es solo para el panel.
+        Modelo3dError = null,
         Modelo3dSolicitadoEn = p.Modelo3dSolicitadoEn,
         Imagenes = p.Imagenes.Select(i => new ProductImageDto
         {

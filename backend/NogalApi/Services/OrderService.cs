@@ -8,7 +8,6 @@ namespace NogalApi.Services;
 public class OrderService : IOrderService
 {
     private const int TamanoMax = 100;
-    private static readonly Random Rng = new();
 
     private readonly AppDbContext _context;
     private readonly IPaymentService _paymentService;
@@ -80,6 +79,10 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("Un WhatsApp o correo es obligatorio.");
         if (dto.Items.Count == 0)
             throw new InvalidOperationException("El pedido no tiene productos.");
+        if (dto.Items.Count > 50)
+            throw new InvalidOperationException("El pedido tiene demasiados productos.");
+        if (dto.Cliente.Length > 120 || dto.Ciudad.Length > 80 || dto.Contacto.Length > 120)
+            throw new InvalidOperationException("Nombre, ciudad o contacto superan la longitud permitida.");
 
         var productoIds = dto.Items.Select(i => i.ProductId).Distinct().ToList();
         var productos = await _context.Products
@@ -102,6 +105,8 @@ public class OrderService : IOrderService
         {
             if (item.Cantidad <= 0)
                 throw new InvalidOperationException("La cantidad debe ser mayor a cero.");
+            if (item.Cantidad > 100)
+                throw new InvalidOperationException("La cantidad máxima por producto es 100.");
 
             var producto = productos.FirstOrDefault(p => p.Id == item.ProductId)
                 ?? throw new InvalidOperationException($"Producto {item.ProductId} no existe.");
@@ -203,22 +208,22 @@ public class OrderService : IOrderService
         return Map(pedido);
     }
 
+    /// <summary>
+    /// Refresca el pedido cuando el cliente vuelve del checkout. NO aplica
+    /// el estado de la transacción indicada por el cliente: el
+    /// <paramref name="transactionId"/> llega por query string y un atacante
+    /// podría pasar el id de cualquier transacción APPROVED (de otro pedido
+    /// más barato, de otro comercio o de sandbox). La única fuente de verdad
+    /// del pago es el webhook firmado con EventsSecret
+    /// (<see cref="AplicarEventoPagoAsync"/>).
+    /// </summary>
     public async Task<OrderDto?> VerificarPagoAsync(string codigo, string transactionId, CancellationToken cancellationToken = default)
     {
         var pedido = await _context.Orders
+            .AsNoTracking()
             .Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Codigo == codigo, cancellationToken);
-        if (pedido is null) return null;
-
-        var resultado = await _paymentService.ConsultarAsync(transactionId, cancellationToken);
-        if (resultado is null)
-        {
-            return Map(pedido);
-        }
-
-        AplicarResultadoPago(pedido, resultado.Estado, resultado.TransaccionId);
-        await _context.SaveChangesAsync(cancellationToken);
-        return Map(pedido);
+        return pedido is null ? null : Map(pedido);
     }
 
     public async Task<bool> AplicarEventoPagoAsync(
@@ -226,10 +231,26 @@ public class OrderService : IOrderService
         string transactionId,
         PagoEstadoAgregado estado,
         DateTime eventoEmitidoEn,
+        long? montoEnCentavos = null,
+        string? moneda = null,
         CancellationToken cancellationToken = default)
     {
         var pedido = await _context.Orders.FirstOrDefaultAsync(o => o.Codigo == codigo, cancellationToken);
         if (pedido is null) return false;
+
+        // Defensa en profundidad: una aprobación solo confirma el pedido si
+        // el monto y la moneda cobrados coinciden con el total calculado en
+        // el servidor. Evita confirmar un pedido de $3.000.000 con un cobro
+        // de $1.000 que reutilice la misma referencia.
+        if (estado == PagoEstadoAgregado.Aprobado)
+        {
+            var esperado = (long)Math.Round(pedido.Total * 100m);
+            if (montoEnCentavos != esperado ||
+                !string.Equals(moneda, "COP", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
 
         // Un evento más viejo que la última actualización del pago no debe
         // pisar el estado actual — Wompi puede reordenar reintentos y sería
@@ -274,7 +295,11 @@ public class OrderService : IOrderService
     }
 
     /// <summary>
-    /// Genera un código único NGL-XXXXXX (hex, 6 chars). Reintenta si hay colisión.
+    /// Genera un código único NGL-XXXXXXXXXXXX (12 hex = 48 bits, CSPRNG).
+    /// El código es la única "credencial" del endpoint público
+    /// GET /api/orders/{codigo}: con 6 hex de System.Random (16,7 M
+    /// combinaciones) se podía enumerar pedidos ajenos y leer nombre,
+    /// ciudad y contacto del cliente.
     /// </summary>
     public Task<string> GenerarCodigoUnicoAsync(CancellationToken cancellationToken = default)
         => GenerarCodigoUnicoAsync(_context, cancellationToken);
@@ -287,8 +312,7 @@ public class OrderService : IOrderService
     {
         for (var intento = 0; intento < 5; intento++)
         {
-            var buffer = new byte[3];
-            lock (Rng) { Rng.NextBytes(buffer); }
+            var buffer = System.Security.Cryptography.RandomNumberGenerator.GetBytes(6);
             var codigo = $"NGL-{Convert.ToHexString(buffer)}";
             var existe = await context.Orders.AnyAsync(o => o.Codigo == codigo, cancellationToken);
             if (!existe) return codigo;

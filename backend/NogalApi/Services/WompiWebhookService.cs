@@ -111,6 +111,15 @@ public sealed class WompiWebhookService : IWompiWebhookService
             var statusRaw = trx.ValueKind == JsonValueKind.Object && trx.TryGetProperty("status", out var stProp)
                 ? stProp.GetString() ?? "PENDING"
                 : "PENDING";
+            long? montoEnCentavos = trx.ValueKind == JsonValueKind.Object &&
+                                    trx.TryGetProperty("amount_in_cents", out var amountProp) &&
+                                    amountProp.ValueKind == JsonValueKind.Number &&
+                                    amountProp.TryGetInt64(out var amount)
+                ? amount
+                : null;
+            var moneda = trx.ValueKind == JsonValueKind.Object && trx.TryGetProperty("currency", out var curProp)
+                ? curProp.GetString()
+                : null;
             var estado = statusRaw.ToUpperInvariant() switch
             {
                 "APPROVED" => PagoEstadoAgregado.Aprobado,
@@ -127,15 +136,21 @@ public sealed class WompiWebhookService : IWompiWebhookService
                 : DateTime.UtcNow;
 
             // Persistir siempre el evento (firma válida o no), para auditoría.
+            // Un evento SIN firma válida no puede ocupar la llave de
+            // idempotencia: si no, un tercero podría "pre-registrar"
+            // trxId:timestamp y hacer que el evento real de Wompi se descarte
+            // como duplicado. Además truncamos lo que se guarda de requests
+            // no autenticadas para no llenar la base con payloads grandes.
+            const int MaxPayloadNoVerificado = 4096;
             var registro = new PaymentEvent
             {
                 Proveedor = "wompi",
-                EventoId = eventoId,
-                Tipo = string.IsNullOrEmpty(tipo) ? "transaction.updated" : tipo,
-                PayloadRaw = bodyRaw,
+                EventoId = firmaOk ? eventoId : $"invalida:{Guid.NewGuid():N}",
+                Tipo = Truncar(string.IsNullOrEmpty(tipo) ? "transaction.updated" : tipo, 60),
+                PayloadRaw = firmaOk ? bodyRaw : Truncar(bodyRaw, MaxPayloadNoVerificado),
                 FirmaVerificada = firmaOk,
-                PedidoCodigo = reference,
-                TransaccionId = trxId,
+                PedidoCodigo = reference is null ? null : Truncar(reference, 20),
+                TransaccionId = trxId is null ? null : Truncar(trxId, 80),
                 EstadoResultado = estado.ToString(),
                 EventoEmitidoEn = emitidoEn,
                 RecibidoEn = DateTime.UtcNow
@@ -166,7 +181,7 @@ public sealed class WompiWebhookService : IWompiWebhookService
             if (!string.IsNullOrEmpty(reference) && !string.IsNullOrEmpty(trxId))
             {
                 var aplicado = await _orders.AplicarEventoPagoAsync(
-                    reference, trxId, estado, emitidoEn, cancellationToken);
+                    reference, trxId, estado, emitidoEn, montoEnCentavos, moneda, cancellationToken);
                 _logger.LogInformation(
                     "Webhook Wompi {Estado} para pedido {Codigo} (aplicado={Aplicado}).",
                     estado, reference, aplicado);
@@ -207,6 +222,8 @@ public sealed class WompiWebhookService : IWompiWebhookService
         };
         return true;
     }
+
+    private static string Truncar(string valor, int max) => valor.Length <= max ? valor : valor[..max];
 
     private static string HexSha256(string input)
     {

@@ -19,10 +19,10 @@ public class WompiWebhookServiceTests
         return Convert.ToHexString(bytes);
     }
 
-    private static string Evento(string reference, string id, string status, long timestamp, string checksum) => $$"""
+    private static string Evento(string reference, string id, string status, long timestamp, string checksum, long amount = 39000000) => $$"""
         {
           "event": "transaction.updated",
-          "data": { "transaction": { "id": "{{id}}", "status": "{{status}}", "amount_in_cents": 39000000, "reference": "{{reference}}" } },
+          "data": { "transaction": { "id": "{{id}}", "status": "{{status}}", "amount_in_cents": {{amount}}, "currency": "COP", "reference": "{{reference}}" } },
           "signature": {
             "properties": ["transaction.id", "transaction.status", "transaction.amount_in_cents"],
             "checksum": "{{checksum}}"
@@ -106,5 +106,39 @@ public class WompiWebhookServiceTests
         var res = await webhook.ProcesarAsync(body);
 
         Assert.Equal(WebhookResultadoCodigo.PayloadInvalido, res.Codigo);
+    }
+
+    [Fact]
+    public async Task AprobacionConMontoDistintoAlTotalNoConfirmaElPedido()
+    {
+        using var db = TestDb.Create();
+        var (webhook, orders) = Crear(db);
+        var codigo = await CrearPedido(orders, db);
+        const long ts = 1792600000;
+
+        var res = await webhook.ProcesarAsync(Evento(codigo, "trx-barato", "APPROVED", ts,
+            Firmar("trx-barato", "APPROVED", 100000, ts), amount: 100000));
+
+        Assert.Equal(WebhookResultadoCodigo.Ok, res.Codigo);
+        Assert.Equal("Pago pendiente", (await db.Orders.SingleAsync()).Estado);
+    }
+
+    [Fact]
+    public async Task UnEventoConFirmaFalsaNoBloqueaElEventoRealPosterior()
+    {
+        using var db = TestDb.Create();
+        var (webhook, orders) = Crear(db);
+        var codigo = await CrearPedido(orders, db);
+        const long ts = 1792600000;
+
+        var falso = await webhook.ProcesarAsync(Evento(codigo, "trx-123", "APPROVED", ts,
+            Firmar("trx-123", "APPROVED", 39000000, ts, secret: "otro_secreto")));
+        var real = await webhook.ProcesarAsync(Evento(codigo, "trx-123", "APPROVED", ts,
+            Firmar("trx-123", "APPROVED", 39000000, ts)));
+
+        Assert.Equal(WebhookResultadoCodigo.FirmaInvalida, falso.Codigo);
+        Assert.Equal(WebhookResultadoCodigo.Ok, real.Codigo);
+        Assert.Null(real.Detalle);
+        Assert.Equal(OrderCatalogo.PagoConfirmado, (await db.Orders.SingleAsync()).Estado);
     }
 }

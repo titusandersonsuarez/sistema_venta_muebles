@@ -12,6 +12,10 @@ namespace NogalApi.Services;
 
 public class AuthService : IAuthService
 {
+    // Hash fijo para gastar el mismo tiempo de BCrypt cuando el usuario no
+    // existe (evita enumerar usuarios por tiempo de respuesta).
+    private static readonly string HashFicticio = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+
     private readonly AppDbContext _context;
     private readonly JwtOptions _jwtOptions;
 
@@ -26,7 +30,13 @@ public class AuthService : IAuthService
         var usuario = await _context.Usuarios
             .FirstOrDefaultAsync(u => u.NombreUsuario == nombreUsuario && u.Activo);
 
-        if (usuario == null || !BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash))
+        if (usuario == null)
+        {
+            BCrypt.Net.BCrypt.Verify(password, HashFicticio);
+            return null;
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(password, usuario.PasswordHash))
         {
             return null;
         }

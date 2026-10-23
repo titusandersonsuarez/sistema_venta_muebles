@@ -19,6 +19,8 @@ public interface IOrderService
     /// al pedido identificado por <paramref name="codigo"/>. Ignora
     /// eventos más viejos que la última actualización del pago para no
     /// pisar un estado ya confirmado con uno anterior que llegue tarde.
+    /// Una aprobación solo se aplica si <paramref name="montoEnCentavos"/> y
+    /// <paramref name="moneda"/> coinciden con el total del pedido.
     /// Devuelve true si el pedido cambió, false si el evento se descartó.
     /// </summary>
     Task<bool> AplicarEventoPagoAsync(
@@ -26,5 +28,7 @@ public interface IOrderService
         string transactionId,
         PagoEstadoAgregado estado,
         DateTime eventoEmitidoEn,
+        long? montoEnCentavos = null,
+        string? moneda = null,
         CancellationToken cancellationToken = default);
 }

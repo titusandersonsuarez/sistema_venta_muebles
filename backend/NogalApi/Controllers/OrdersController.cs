@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using NogalApi.Models.Orders;
+using NogalApi.Options;
 using NogalApi.Services;
 
 namespace NogalApi.Controllers;
@@ -10,16 +13,22 @@ namespace NogalApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/orders")]
+[EnableRateLimiting("publico-lectura")]
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _pedidos;
+    private readonly WompiOptions _wompiOptions;
+    private readonly IWebHostEnvironment _env;
 
-    public OrdersController(IOrderService pedidos)
+    public OrdersController(IOrderService pedidos, IOptions<WompiOptions> wompiOptions, IWebHostEnvironment env)
     {
         _pedidos = pedidos;
+        _wompiOptions = wompiOptions.Value;
+        _env = env;
     }
 
     [HttpPost]
+    [EnableRateLimiting("publico-escritura")]
     public async Task<IActionResult> Crear([FromBody] CreateOrderDto dto)
     {
         try
@@ -37,7 +46,30 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> ObtenerPorCodigo(string codigo)
     {
         var pedido = await _pedidos.ObtenerPorCodigoAsync(codigo);
-        return pedido is null ? NotFound() : Ok(pedido);
+        return pedido is null ? NotFound() : Ok(VistaPublica(pedido));
+    }
+
+    /// <summary>
+    /// Quien conoce el código no necesariamente es el cliente (enlaces
+    /// reenviados, historial del navegador, capturas). Ocultamos el dato de
+    /// contacto completo en las respuestas públicas; el panel admin lo ve entero.
+    /// </summary>
+    private static OrderDto VistaPublica(OrderDto pedido)
+    {
+        pedido.Contacto = EnmascararContacto(pedido.Contacto);
+        pedido.PagoTransaccionId = null;
+        return pedido;
+    }
+
+    private static string? EnmascararContacto(string? contacto)
+    {
+        if (string.IsNullOrWhiteSpace(contacto)) return contacto;
+        var arroba = contacto.IndexOf('@');
+        if (arroba > 0)
+        {
+            return $"{contacto[0]}***{contacto[arroba..]}";
+        }
+        return contacto.Length <= 4 ? "***" : $"***{contacto[^4..]}";
     }
 
     /// <summary>
@@ -65,10 +97,17 @@ public class OrdersController : ControllerBase
     [HttpPost("{codigo}/pago/demo")]
     public async Task<IActionResult> ConfirmarPagoDemo(string codigo, [FromBody] ConfirmarPagoDemoDto dto)
     {
+        // Este endpoint permite al propio cliente marcar su pedido como
+        // pagado. Fuera de Development (o sin AllowDemo explícito) no existe.
+        if (!PaymentServiceDispatcher.DemoPermitido(_wompiOptions, _env))
+        {
+            return NotFound();
+        }
+
         try
         {
             var pedido = await _pedidos.ConfirmarPagoDemoAsync(codigo, dto.Aprobado);
-            return pedido is null ? NotFound() : Ok(pedido);
+            return pedido is null ? NotFound() : Ok(VistaPublica(pedido));
         }
         catch (InvalidOperationException ex)
         {
@@ -88,6 +127,6 @@ public class OrdersController : ControllerBase
             return BadRequest(new { mensaje = "transactionId es obligatorio." });
         }
         var pedido = await _pedidos.VerificarPagoAsync(codigo, transactionId);
-        return pedido is null ? NotFound() : Ok(pedido);
+        return pedido is null ? NotFound() : Ok(VistaPublica(pedido));
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NogalApi.Models.Reviews;
 using NogalApi.Services;
 
@@ -30,6 +31,7 @@ public class ReviewsController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("publico-escritura")]
     public async Task<IActionResult> Crear(string slug, [FromBody] CreateReviewDto dto, CancellationToken cancellationToken)
     {
         try

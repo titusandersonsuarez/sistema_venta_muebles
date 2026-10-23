@@ -1,5 +1,8 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -90,6 +93,28 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException("Falta la sección 'Jwt' en la configuración.");
 
+// Fallar cerrado fuera de Development: la llave de ejemplo es pública (está
+// en el repo y en docker-compose), así que con ella cualquiera puede firmar
+// un JWT con rol Admin. Igual con la contraseña de ejemplo de Postgres.
+if (!builder.Environment.IsDevelopment())
+{
+    const string LlaveJwtDeEjemplo = "CAMBIA_ESTA_LLAVE_POR_UNA_DE_AL_MENOS_32_CARACTERES_LARGA";
+    if (string.IsNullOrWhiteSpace(jwtOptions.Key) ||
+        jwtOptions.Key == LlaveJwtDeEjemplo ||
+        Encoding.UTF8.GetByteCount(jwtOptions.Key) < 32)
+    {
+        throw new InvalidOperationException(
+            "Jwt:Key no está configurada o es la llave de ejemplo. Define Jwt__Key con un valor aleatorio de al menos 32 bytes.");
+    }
+
+    var cadenaDb = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+    if (System.Text.RegularExpressions.Regex.IsMatch(cadenaDb, @"(?i)password\s*=\s*nogal\s*(;|$)"))
+    {
+        throw new InvalidOperationException(
+            "La cadena de conexión usa la contraseña de ejemplo de Postgres. Define POSTGRES_PASSWORD / ConnectionStrings__DefaultConnection.");
+    }
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -124,6 +149,34 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// La API corre detrás de nginx (y en Azure, además, detrás del ingress).
+// Sin esto RemoteIpAddress es la IP del proxy y todos los clientes caerían
+// en el mismo bucket del rate limiter. ForwardLimit = número de proxies
+// confiables delante de la API (1 = solo nginx; 2 = ingress + nginx).
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = builder.Configuration.GetValue("ForwardedHeaders:ForwardLimit", 1);
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Límites por IP para endpoints anónimos: fuerza bruta de login, abuso de
+// costo de Gemini en /api/chat y spam de pedidos/reseñas/contacto.
+static string ClaveIp(HttpContext ctx) => ctx.Connection.RemoteIpAddress?.ToString() ?? "desconocida";
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", ctx => RateLimitPartition.GetFixedWindowLimiter(ClaveIp(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    options.AddPolicy("chat", ctx => RateLimitPartition.GetSlidingWindowLimiter(ClaveIp(ctx),
+        _ => new SlidingWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(10), SegmentsPerWindow = 10, QueueLimit = 0 }));
+    options.AddPolicy("publico-escritura", ctx => RateLimitPartition.GetFixedWindowLimiter(ClaveIp(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    options.AddPolicy("publico-lectura", ctx => RateLimitPartition.GetFixedWindowLimiter(ClaveIp(ctx),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
+
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
@@ -149,11 +202,13 @@ using (var scope = app.Services.CreateScope())
     var seedOptions = scope.ServiceProvider.GetRequiredService<IOptions<AdminSeedOptions>>().Value;
 
     await context.Database.MigrateAsync();
-    await DbSeeder.SeedAdminAsync(context, seedOptions, app.Logger);
+    await DbSeeder.SeedAdminAsync(context, seedOptions, app.Logger, app.Environment.IsDevelopment());
     await OrderSeeder.SeedAsync(context);
     await ProductionSeeder.SeedAsync(context);
     await DbSeeder.SeedProductVariantsAsync(context);
 }
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -167,10 +222,27 @@ if (app.Environment.IsDevelopment())
 // configurado rompe POSTs (respuestas 307/503 impredecibles).
 if (!app.Environment.IsDevelopment())
 {
+    app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+// Cabeceras de seguridad para respuestas de la API y de /uploads.
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Referrer-Policy"] = "no-referrer";
+    // Swagger UI (solo Development) necesita scripts propios.
+    if (!context.Request.Path.StartsWithSegments("/swagger"))
+    {
+        headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; sandbox";
+    }
+    await next();
+});
 app.UseStaticFiles();
 app.UseCors("Frontend");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

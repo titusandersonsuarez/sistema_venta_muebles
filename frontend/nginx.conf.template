@@ -3,6 +3,22 @@ server {
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
+    server_tokens off;
+    # Alineado con [RequestSizeLimit(20 MB)] de la subida de imágenes.
+    client_max_body_size 20m;
+
+    # Cabeceras de seguridad (a nivel server; no usar add_header dentro de
+    # los location o nginx descarta estas). HSTS se agrega en el ingress
+    # HTTPS / API (UseHsts), no aquí porque este nginx escucha en HTTP.
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    # CSP: React usa atributos style (unsafe-inline solo en style-src);
+    # model-viewer carga decodificadores Draco/KTX2 (wasm) desde gstatic y
+    # modelos GLB/USDZ de dominios https externos (Meshy, Azure Blob).
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https: blob: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.wompi.co; frame-ancestors 'none'" always;
 
     # SPA fallback: cualquier ruta desconocida sirve index.html
     # para que React Router maneje el ruteo del lado del cliente.

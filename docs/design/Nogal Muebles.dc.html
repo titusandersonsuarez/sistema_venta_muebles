@@ -355,7 +355,7 @@
           <p style="font-size:12px;color:var(--color-accent-700);border-left:1px solid var(--color-accent);padding-left:var(--space-2);margin:0">{{ errorLogin }}</p>
         </sc-if>
         <button class="btn btn-primary btn-block" type="submit">Entrar</button>
-        <p class="text-muted" style="font-size:11px;margin:0;text-align:center">Demo: admin / nogal2026</p>
+        <p class="text-muted" style="font-size:11px;margin:0;text-align:center">Prototipo: cualquier usuario y clave no vacíos.</p>
       </form>
     </main>
   </sc-if>
@@ -870,8 +870,8 @@ class Component extends DCLogic {
       setUsuario:(e)=>this.setState({usuario:e.target.value}),
       setClave:(e)=>this.setState({clave:e.target.value}),
       entrar:(e)=>{ if(e) e.preventDefault();
-        const ok=s.usuario.trim()==='admin' && s.clave==='nogal2026';
-        this.setState(ok?{autenticado:true, errorLogin:'', clave:''}:{errorLogin:'Usuario o contraseña incorrectos. Prueba admin / nogal2026.'}); },
+        const ok=s.usuario.trim().length>0 && s.clave.length>0; // prototipo sin credenciales reales
+        this.setState(ok?{autenticado:true, errorLogin:'', clave:''}:{errorLogin:'Escribe usuario y contraseña.'}); },
       salir:()=>this.setState({autenticado:false, vista:'home', usuario:'', clave:''}),
       chatAbierto:s.chatAbierto, chatTexto:s.chatTexto,
       chat:s.chat.map((m,i)=>({...m, just:m.rol==='yo'?'flex-end':'flex-start',

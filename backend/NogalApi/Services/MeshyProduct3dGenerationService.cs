@@ -62,7 +62,7 @@ public sealed class MeshyProduct3dGenerationService : IProduct3dGenerationServic
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Meshy API respondió con código {StatusCode}: {Response}", response.StatusCode, rawJson);
-            throw new InvalidOperationException($"Error al crear tarea 3D en Meshy (HTTP {response.StatusCode}): {rawJson}");
+            throw new InvalidOperationException($"Error al crear tarea 3D en Meshy (HTTP {(int)response.StatusCode}). Revisa el log del servidor.");
         }
 
         using var doc = JsonDocument.Parse(rawJson);

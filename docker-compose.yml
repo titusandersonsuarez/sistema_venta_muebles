@@ -5,11 +5,13 @@ services:
     environment:
       POSTGRES_DB: nogal
       POSTGRES_USER: nogal
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nogal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Solo accesible desde la máquina local (antes quedaba expuesto en todas
+    # las interfaces con la contraseña de ejemplo).
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nogal -d nogal"]
       interval: 10s
@@ -27,20 +29,25 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=nogal;Username=nogal;Password=${POSTGRES_PASSWORD:-nogal}"
-      # Sobrescribe la key demo del appsettings — necesaria en prod real.
-      Jwt__Key: ${JWT_KEY:-CAMBIA_ESTA_LLAVE_POR_UNA_DE_AL_MENOS_32_CARACTERES_LARGA}
-      # Contraseña del admin inicial. Si se deja vacía, la API genera una y la muestra en el log.
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=nogal;Username=nogal;Password=${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}"
+      # Obligatoria: sin fallback a la llave de ejemplo (pública en el repo).
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY en .env (openssl rand -base64 48)}
+      # Contraseña del admin inicial. Obligatoria la primera vez en Production.
       AdminSeed__Password: ${ADMIN_PASSWORD:-}
       Cors__AllowedOrigins__0: "http://localhost"
       Cors__AllowedOrigins__1: "http://localhost:8080"
       # El frontend nginx proxea todo, así que estos redirects deben apuntar al mismo host.
       Wompi__RedirectBaseUrl: "http://localhost/carrito/gracias"
       Wompi__DemoCheckoutBaseUrl: "http://localhost/carrito/pago-demo"
+      # Pasarela simulada (botón "Aprobar"): solo para pruebas locales.
+      # NUNCA en producción: permite marcar pedidos como pagados sin cobrar.
+      Wompi__AllowDemo: ${WOMPI_ALLOW_DEMO:-false}
     volumes:
       - api_uploads:/app/wwwroot/uploads
+    # El tráfico público entra por nginx (servicio web). La API solo queda
+    # publicada en loopback para depurar.
     ports:
-      - "5199:8080"
+      - "127.0.0.1:5199:8080"
     restart: unless-stopped
 
   web:

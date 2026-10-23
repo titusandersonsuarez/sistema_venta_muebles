@@ -11,7 +11,7 @@ public static class DbSeeder
     /// Crea el primer usuario administrador si todavía no existe ninguno.
     /// Así el panel siempre tiene con quién entrar en un ambiente nuevo.
     /// </summary>
-    public static async Task SeedAdminAsync(AppDbContext context, AdminSeedOptions seed, ILogger logger)
+    public static async Task SeedAdminAsync(AppDbContext context, AdminSeedOptions seed, ILogger logger, bool esDesarrollo = false)
     {
         if (await context.Usuarios.AnyAsync())
         {
@@ -21,6 +21,14 @@ public static class DbSeeder
         var password = seed.Password;
         if (string.IsNullOrWhiteSpace(password))
         {
+            // Fuera de Development no generamos ni escribimos la contraseña
+            // en el log: los logs del contenedor (Azure Log Analytics, docker
+            // logs) los leen más personas que el administrador.
+            if (!esDesarrollo)
+            {
+                throw new InvalidOperationException(
+                    "Base de datos sin usuarios y sin AdminSeed__Password. Define AdminSeed__Password (ADMIN_PASSWORD en .env) para crear el admin inicial.");
+            }
             password = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(12));
             logger.LogWarning(
                 "No se definió AdminSeed__Password. Se creó el usuario '{Usuario}' con la contraseña temporal: {Password}. Cámbiala al entrar.",

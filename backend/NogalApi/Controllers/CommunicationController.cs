@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NogalApi.Models.Communication;
 using NogalApi.Services;
 
@@ -12,6 +13,7 @@ public class CommunicationController : ControllerBase
     public CommunicationController(ICommunicationService communication) => _communication = communication;
 
     [HttpPost("contact")]
+    [EnableRateLimiting("publico-escritura")]
     public async Task<IActionResult> Contacto(CreateContactMessageDto dto, CancellationToken cancellationToken)
     {
         try { await _communication.CrearContactoAsync(dto, cancellationToken); return StatusCode(StatusCodes.Status201Created); }
@@ -19,6 +21,7 @@ public class CommunicationController : ControllerBase
     }
 
     [HttpPost("chat")]
+    [EnableRateLimiting("chat")]
     public async Task<IActionResult> Chat(ChatRequestDto dto, CancellationToken cancellationToken)
     {
         try { return Ok(await _communication.ResponderChatAsync(dto, cancellationToken)); }

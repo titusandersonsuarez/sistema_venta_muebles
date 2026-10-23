@@ -10,7 +10,8 @@
 
 param(
     [string]$ApiBase = 'http://localhost:5199',
-    [string]$EventsSecret = 'test_events_secret'
+    [Parameter(Mandatory = $true)]
+    [string]$EventsSecret
 )
 
 $ErrorActionPreference = 'Stop'

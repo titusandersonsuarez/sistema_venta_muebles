@@ -89,12 +89,36 @@ public class OrderServiceTests
         var pedido = await service.CrearAsync(Pedido(new CreateOrderItemDto { ProductId = silla.Id, Cantidad = 1 }));
         var ahora = new DateTime(2026, 10, 21, 15, 0, 0, DateTimeKind.Utc);
 
-        Assert.True(await service.AplicarEventoPagoAsync(pedido.Codigo, "trx-1", PagoEstadoAgregado.Aprobado, ahora));
+        Assert.True(await service.AplicarEventoPagoAsync(pedido.Codigo, "trx-1", PagoEstadoAgregado.Aprobado, ahora, 13_000_000, "COP"));
         // Un reintento rezagado de Wompi (anterior) que dice "rechazado" no debe deshacer la aprobación.
         Assert.False(await service.AplicarEventoPagoAsync(pedido.Codigo, "trx-1", PagoEstadoAgregado.Rechazado, ahora.AddMinutes(-5)));
 
         var guardado = await db.Orders.SingleAsync();
         Assert.Equal(OrderCatalogo.PagoConfirmado, guardado.Estado);
         Assert.Equal("trx-1", guardado.PagoTransaccionId);
+    }
+
+    [Fact]
+    public async Task VerificarPagoNoConfiaEnElTransactionIdDelCliente()
+    {
+        using var db = TestDb.Create();
+        var silla = TestDb.AddProduct(db, "Silla", 100_000m);
+        var pagos = new AprobadorFalso();
+        var service = new OrderService(db, pagos);
+        var pedido = await service.CrearAsync(Pedido(new CreateOrderItemDto { ProductId = silla.Id, Cantidad = 1 }));
+
+        var resultado = await service.VerificarPagoAsync(pedido.Codigo, "trx-de-otro-pedido");
+
+        Assert.Equal("Pago pendiente", resultado!.Estado);
+        Assert.Equal("Pago pendiente", (await db.Orders.SingleAsync()).Estado);
+    }
+
+    private sealed class AprobadorFalso : IPaymentService
+    {
+        public Task<PagoIntencionResultado> CrearIntencionAsync(NogalApi.Models.Order pedido, CancellationToken cancellationToken = default)
+            => Task.FromResult(new PagoIntencionResultado("wompi", "https://pago.test"));
+
+        public Task<PagoEstadoResultado?> ConsultarAsync(string transactionId, CancellationToken cancellationToken = default)
+            => Task.FromResult<PagoEstadoResultado?>(new PagoEstadoResultado(PagoEstadoAgregado.Aprobado, transactionId, "APPROVED"));
     }
 }

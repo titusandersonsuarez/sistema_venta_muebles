@@ -13,6 +13,13 @@ public class WompiOptions
     /// </summary>
     public string Provider { get; set; } = "demo";
 
+    /// <summary>
+    /// Permite el proveedor "demo" (pantalla con botón "Aprobar") fuera de
+    /// Development. Debe quedar en false en producción: con demo activo
+    /// cualquiera puede marcar su pedido como pagado sin cobrar nada.
+    /// </summary>
+    public bool AllowDemo { get; set; }
+
     public string? PublicKey { get; set; }
     public string? IntegritySecret { get; set; }
     public string? EventsSecret { get; set; }
