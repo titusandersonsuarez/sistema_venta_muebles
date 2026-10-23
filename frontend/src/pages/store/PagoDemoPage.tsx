@@ -71,79 +71,47 @@ export function PagoDemoPage() {
     )
   }
 
+  const unidades = pedido.items.reduce((sum, i) => sum + i.cantidad, 0)
+
   return (
-    <main
-      style={{
-        display: 'grid',
-        placeItems: 'center',
-        padding: 'var(--space-6) max(var(--space-4), 4vw)',
-        minHeight: 'calc(100vh - 120px)'
-      }}
-    >
-      <div className="card" style={{ maxWidth: 520, width: '100%', padding: 'var(--space-6)' }}>
-        <p
-          className="text-muted"
-          style={{
-            fontSize: 11,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            margin: 0,
-            marginBottom: 'var(--space-2)'
-          }}
-        >
-          Pasarela · Simulación
-        </p>
-        <h1 style={{ margin: 0, fontSize: 28 }}>Pagar pedido {pedido.codigo}</h1>
-        <p className="text-muted" style={{ fontSize: 13, marginTop: 'var(--space-2)' }}>
-          Estás en una pantalla de prueba. En producción esto lo maneja Wompi (tarjeta, PSE, Nequi,
-          Bancolombia). Elige un resultado para simular el retorno.
-        </p>
+    <main className="pay-page">
+      <p className="pay-sandbox" role="note">
+        Pasarela en modo de prueba: aquí no se cobra nada. En producción esta pantalla es el checkout de Wompi
+        (tarjeta, PSE, Nequi o Bancolombia).
+      </p>
+      <div className="pay-grid">
+        <section className="pay-summary" aria-labelledby="pay-resumen">
+          <h1 id="pay-resumen" className="pay-title">Pagar pedido</h1>
+          <p className="text-muted pay-code">Orden {pedido.codigo} · {unidades} {unidades === 1 ? 'mueble' : 'muebles'}</p>
+          <ul className="pay-items">
+            {pedido.items.map(item => (
+              <li key={item.id}>
+                <span>
+                  {item.nombreProducto}
+                  {item.varianteNombre && <span className="text-muted">, {item.varianteNombre}</span>}
+                  {item.cantidad > 1 && <span className="text-muted"> × {item.cantidad}</span>}
+                </span>
+                <span className="pay-num">{monedaCOP.format(item.subtotal)}</span>
+              </li>
+            ))}
+          </ul>
+          <dl className="pay-meta">
+            <dt>Cliente</dt><dd>{pedido.cliente}</dd>
+            <dt>Despacho</dt><dd>{pedido.ciudad}, {pedido.envioCOP === 0 ? 'envío gratis' : monedaCOP.format(pedido.envioCOP)}</dd>
+          </dl>
+        </section>
 
-        <dl
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            rowGap: 'var(--space-2)',
-            marginTop: 'var(--space-5)',
-            fontVariantNumeric: 'tabular-nums'
-          }}
-        >
-          <dt>Cliente</dt>
-          <dd style={{ margin: 0, textAlign: 'right' }}>{pedido.cliente}</dd>
-          <dt>Ciudad</dt>
-          <dd style={{ margin: 0, textAlign: 'right' }}>{pedido.ciudad}</dd>
-          <dt>Ítems</dt>
-          <dd style={{ margin: 0, textAlign: 'right' }}>
-            {pedido.items.reduce((sum, i) => sum + i.cantidad, 0)}
-          </dd>
-          <dt style={{ fontSize: 16, marginTop: 'var(--space-2)' }}>Total a pagar</dt>
-          <dd
-            style={{ margin: 0, textAlign: 'right', fontSize: 22, marginTop: 'var(--space-2)' }}
-          >
-            <strong>{monedaCOP.format(pedido.total)}</strong>
-          </dd>
-        </dl>
+        <section className="pay-panel" aria-label="Resultado del pago">
+          <p className="pay-label">Total a pagar</p>
+          <p className="pay-total">{monedaCOP.format(pedido.total)}</p>
 
-        {error && (
-          <p
-            role="alert"
-            style={{
-              color: 'var(--color-accent-700)',
-              borderLeft: '2px solid var(--color-accent)',
-              paddingLeft: 'var(--space-2)',
-              marginTop: 'var(--space-4)',
-              fontSize: 13
-            }}
-          >
-            {error}
-          </p>
-        )}
+          {error && (
+            <p role="alert" className="pay-error">{error}</p>
+          )}
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)', flexWrap: 'wrap' }}>
           <button
             type="button"
-            className="btn btn-primary"
-            style={{ flex: '1 1 180px' }}
+            className="btn btn-primary pay-btn"
             disabled={procesando !== null}
             onClick={() => decidir(true)}
           >
@@ -151,14 +119,14 @@ export function PagoDemoPage() {
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
-            style={{ flex: '1 1 180px' }}
+            className="btn btn-secondary pay-btn"
             disabled={procesando !== null}
             onClick={() => decidir(false)}
           >
             {procesando === 'rechazado' ? 'Rechazando…' : 'Rechazar pago'}
           </button>
-        </div>
+          <p className="text-muted pay-hint">Elige un resultado para ver cómo responde la tienda en cada caso.</p>
+        </section>
       </div>
     </main>
   )

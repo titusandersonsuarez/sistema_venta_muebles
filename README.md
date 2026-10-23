@@ -16,6 +16,11 @@ Moneda **COP** (`$ 1.890.000`, es-CO). Idioma: español colombiano.
 ## Preview
 
 <p align="center">
+  <a href="docs/demo/nogal_demo.mp4"><img src="docs/demo/nogal_demo.jpg" alt="Ver el video demo de Nogal (41 s)" width="800"></a>
+  <br><sub>▶ Video demo (41 s): compra completa en la tienda y el pedido llegando al panel de la fábrica.</sub>
+</p>
+
+<p align="center">
   <img src="docs/screenshots/01-home.png" alt="Home — hero y categorías" width="800"><br>
   <sub>Home pública — "Somos la fábrica, no el intermediario".</sub>
 </p>
@@ -40,6 +45,10 @@ Moneda **COP** (`$ 1.890.000`, es-CO). Idioma: español colombiano.
   <tr>
     <td><img src="docs/screenshots/10-produccion.png" alt="Producción" width="400"><br><sub>Producción: etapas del taller y materiales por reponer.</sub></td>
     <td><img src="docs/screenshots/11-resenas.png" alt="Moderación de reseñas" width="400"><br><sub>Las reseñas de clientes se moderan antes de publicarse.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/12-confirmacion.png" alt="Confirmación del pedido" width="400"><br><sub>Confirmación del pedido como orden de taller, con el avance del pedido.</sub></td>
+    <td></td>
   </tr>
 </table>
 

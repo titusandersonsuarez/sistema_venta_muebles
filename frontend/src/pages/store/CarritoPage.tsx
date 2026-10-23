@@ -212,7 +212,7 @@ export function CarritoPage() {
         </section>
 
         <section>
-          <div className="card" style={{ padding: 'var(--space-5)' }}>
+          <div className="card cart-summary" style={{ padding: 'var(--space-6)' }}>
             <h2 style={{ marginTop: 0, marginBottom: 'var(--space-4)' }}>Resumen</h2>
             <dl
               style={{
@@ -249,7 +249,7 @@ export function CarritoPage() {
               <strong style={{ fontSize: 22 }}>{monedaCOP.format(total)}</strong>
             </div>
 
-            <form onSubmit={confirmar} style={{ marginTop: 'var(--space-5)' }}>
+            <form onSubmit={confirmar} style={{ marginTop: 'var(--space-5)', display: 'grid', gap: 'var(--space-3)' }}>
               <div className="field">
                 <label htmlFor="carrito-nombre">Nombre</label>
                 <input

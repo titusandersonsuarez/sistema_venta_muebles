@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import * as ordersApi from '../../api/orders'
-import { ApiError } from '../../api/client'
+import * as productsApi from '../../api/products'
+import { API_URL, ApiError } from '../../api/client'
 import type { Order } from '../../types/order'
 
 const monedaCOP = new Intl.NumberFormat('es-CO', {
@@ -10,10 +11,22 @@ const monedaCOP = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 0
 })
 
+const fechaLarga = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+
+/** Recorrido de un pedido pagado, en el orden en que lo vive el cliente. */
+const ETAPAS = ['Pago confirmado', 'En taller', 'En ruta', 'Entregado'] as const
+
+function absolutoImg(url: string): string {
+  if (/^https?:/i.test(url)) return url
+  const base = API_URL.replace(/\/api\/?$/, '')
+  return `${base}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
 export function GraciasPage() {
   const { codigo = '' } = useParams<{ codigo: string }>()
   const [searchParams] = useSearchParams()
   const [pedido, setPedido] = useState<Order | null>(null)
+  const [fotos, setFotos] = useState<Record<number, string>>({})
   const [cargando, setCargando] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -45,87 +58,127 @@ export function GraciasPage() {
     }
   }, [codigo, transactionId])
 
+  // Las fotos son un extra: si el catálogo no responde, la orden se ve igual.
+  useEffect(() => {
+    if (!pedido) return
+    let cancelado = false
+    productsApi
+      .listarPublico({ tamano: 100 })
+      .then(r => {
+        if (cancelado) return
+        const mapa: Record<number, string> = {}
+        for (const p of r.items) if (p.imagenUrl) mapa[p.id] = absolutoImg(p.imagenUrl)
+        setFotos(mapa)
+      })
+      .catch(() => {})
+    return () => {
+      cancelado = true
+    }
+  }, [pedido])
+
   if (cargando) {
-    return <main style={{ padding: 'var(--space-6)' }}>Cargando pedido…</main>
+    return <main className="ticket-page"><p className="text-muted">Cargando tu pedido…</p></main>
   }
 
   if (notFound || !pedido) {
     return (
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'var(--space-6) max(var(--space-4), 4vw)' }}>
+      <main className="ticket-page">
         <h1>No encontramos ese pedido</h1>
-        <p>El código {codigo} no existe. Revisa el enlace que te compartieron.</p>
+        <p>El código {codigo} no existe. Revisa el enlace que te compartimos.</p>
         <Link to="/catalogo" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-          Volver al catálogo
+          Ver el catálogo
         </Link>
       </main>
     )
   }
 
   const nombre = pedido.cliente.split(' ')[0]
-  const { titulo, mensaje, tagVariant } = mensajeSegunEstado(pedido, nombre)
+  const { titulo, mensaje } = mensajeSegunEstado(pedido, nombre)
+  const unidades = pedido.items.reduce((s, i) => s + i.cantidad, 0)
+  const etapaActual = ETAPAS.indexOf(pedido.estado as (typeof ETAPAS)[number])
+  const pagado = etapaActual >= 0
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: 'var(--space-6) max(var(--space-4), 4vw)' }}>
-      <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 'var(--space-2)' }}>
-        <Link to="/">Inicio</Link> · <Link to="/catalogo">Catálogo</Link> · Pedido {pedido.codigo}
-      </p>
-      <h1 style={{ margin: 0, marginBottom: 'var(--space-2)' }}>{titulo}</h1>
-      <p style={{ marginBottom: 'var(--space-5)' }}>{mensaje}</p>
+    <main className="ticket-page">
+      <article className="ticket" aria-labelledby="ticket-titulo">
+        <header className="ticket-head">
+          <div>
+            <span className="ticket-brand">Nogal</span>
+            <span className="ticket-origin">Taller de Puente Aranda, Bogotá</span>
+          </div>
+          <dl className="ticket-ref">
+            <dt>Orden</dt>
+            <dd>{pedido.codigo}</dd>
+            <dt>Fecha</dt>
+            <dd>{fechaLarga.format(new Date(pedido.createdAt))}</dd>
+          </dl>
+        </header>
 
-      <div className="card" style={{ padding: 'var(--space-5)', marginBottom: 'var(--space-5)' }}>
-        <h2 style={{ marginTop: 0, marginBottom: 'var(--space-3)' }}>Resumen</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <h1 id="ticket-titulo" className="ticket-title">{titulo}</h1>
+        <p className="ticket-lead">{mensaje}</p>
+
+        {pagado && (
+          <ol className="ticket-track" aria-label="Estado del pedido">
+            {ETAPAS.map((etapa, i) => (
+              <li
+                key={etapa}
+                className={i < etapaActual ? 'is-done' : i === etapaActual ? 'is-current' : undefined}
+                aria-current={i === etapaActual ? 'step' : undefined}
+              >
+                <span className="ticket-dot" aria-hidden="true" />
+                {etapa}
+              </li>
+            ))}
+          </ol>
+        )}
+        {!pagado && <p className={`ticket-status ${pedido.estado === 'Pago rechazado' ? 'is-alert' : ''}`}>{pedido.estado}</p>}
+
+        <h2 className="ticket-section">{unidades === 1 ? 'Tu mueble' : `Tus ${unidades} muebles`}</h2>
+        <ul className="ticket-items">
           {pedido.items.map(item => (
-            <div
-              key={item.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr auto',
-                alignItems: 'baseline',
-                gap: 'var(--space-3)',
-                fontVariantNumeric: 'tabular-nums'
-              }}
-            >
+            <li key={item.id}>
+              <span
+                className="ticket-thumb"
+                style={fotos[item.productId] ? { backgroundImage: `url("${fotos[item.productId]}")` } : undefined}
+                aria-hidden="true"
+              />
               <div>
-                <div>{item.nombreProducto}</div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  {item.cantidad} × {monedaCOP.format(item.precioUnitario)}
-                  {item.varianteNombre && ` · ${item.varianteNombre}`}
-                </div>
+                <strong>{item.nombreProducto}</strong>
+                <span className="text-muted">
+                  {item.varianteNombre ? `${item.varianteNombre}, ` : ''}
+                  {item.cantidad} {item.cantidad === 1 ? 'unidad' : 'unidades'} de {monedaCOP.format(item.precioUnitario)}
+                </span>
               </div>
-              <div>{monedaCOP.format(item.subtotal)}</div>
-            </div>
+              <span className="ticket-amount">{monedaCOP.format(item.subtotal)}</span>
+            </li>
           ))}
-        </div>
-        <hr className="hr" style={{ margin: 'var(--space-4) 0' }} />
-        <dl
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            rowGap: 'var(--space-2)',
-            margin: 0,
-            fontVariantNumeric: 'tabular-nums'
-          }}
-        >
-          <dt>Subtotal</dt>
-          <dd style={{ margin: 0, textAlign: 'right' }}>
-            {monedaCOP.format(pedido.total - pedido.envioCOP)}
-          </dd>
-          <dt>Envío</dt>
-          <dd style={{ margin: 0, textAlign: 'right' }}>
-            {pedido.envioCOP === 0 ? 'Gratis' : monedaCOP.format(pedido.envioCOP)}
-          </dd>
-          <dt style={{ fontSize: 16, marginTop: 'var(--space-2)' }}>Total</dt>
-          <dd style={{ margin: 0, textAlign: 'right', fontSize: 20, marginTop: 'var(--space-2)' }}>
-            <strong>{monedaCOP.format(pedido.total)}</strong>
-          </dd>
-        </dl>
-        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 'var(--space-4)' }}>
-          Estado: <span className={`tag ${tagVariant}`}>{pedido.estado}</span>
-        </p>
-      </div>
+        </ul>
 
-      <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+        <dl className="ticket-totals">
+          <div>
+            <dt>Subtotal</dt>
+            <dd>{monedaCOP.format(pedido.total - pedido.envioCOP)}</dd>
+          </div>
+          <div>
+            <dt>Envío a {pedido.ciudad}</dt>
+            <dd>{pedido.envioCOP === 0 ? 'Gratis' : monedaCOP.format(pedido.envioCOP)}</dd>
+          </div>
+          <div className="ticket-grand">
+            <dt>{pagado ? 'Total pagado' : 'Total'}</dt>
+            <dd>{monedaCOP.format(pedido.total)}</dd>
+          </div>
+        </dl>
+
+        <footer className="ticket-foot">
+          <p>
+            <span className="text-muted">Para</span> {pedido.cliente}, {pedido.ciudad}
+            {pedido.contacto && <> · {pedido.contacto}</>}
+          </p>
+          <p className="text-muted">10 años de garantía de fábrica. Guarda este código para cualquier consulta.</p>
+        </footer>
+      </article>
+
+      <div className="ticket-actions">
         {pedido.estado === 'Pago rechazado' && (
           <Link
             to={`/carrito/pago-demo/${encodeURIComponent(pedido.codigo)}`}
@@ -135,7 +188,7 @@ export function GraciasPage() {
             Reintentar el pago
           </Link>
         )}
-        <Link to="/catalogo" className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+        <Link to="/catalogo" className={`btn ${pedido.estado === 'Pago rechazado' ? 'btn-secondary' : 'btn-primary'}`} style={{ textDecoration: 'none' }}>
           Seguir comprando
         </Link>
         <Link to="/" className="btn btn-ghost" style={{ textDecoration: 'none' }}>
@@ -146,26 +199,26 @@ export function GraciasPage() {
   )
 }
 
-function mensajeSegunEstado(pedido: Order, nombre: string): { titulo: string; mensaje: string; tagVariant: string } {
+function mensajeSegunEstado(pedido: Order, nombre: string): { titulo: string; mensaje: string } {
   const contacto = pedido.contacto ?? 'tu WhatsApp o correo'
   switch (pedido.estado) {
     case 'Pago confirmado':
+    case 'En taller':
+    case 'En ruta':
+    case 'Entregado':
       return {
         titulo: `¡Pago confirmado, ${nombre}!`,
-        mensaje: `Recibimos tu pago del pedido ${pedido.codigo}. Ya lo mandamos al taller — te avisamos por ${contacto} cuando esté listo para despacho a ${pedido.ciudad}.`,
-        tagVariant: 'tag-accent'
+        mensaje: `Tu pedido ya está en la fila del taller. Te escribimos al ${contacto} cuando salga para ${pedido.ciudad}.`
       }
     case 'Pago rechazado':
       return {
         titulo: 'El pago no se pudo procesar',
-        mensaje: `La pasarela rechazó el intento de pago del pedido ${pedido.codigo}. Puedes reintentar aquí o escribirnos a ${contacto} y coordinamos otra forma de pago.`,
-        tagVariant: 'tag-outline'
+        mensaje: `La pasarela rechazó el pago. Puedes intentarlo de nuevo o escribirnos al ${contacto} y coordinamos otra forma de pago.`
       }
     default:
       return {
         titulo: `Gracias, ${nombre}.`,
-        mensaje: `Registramos tu pedido ${pedido.codigo}. Un miembro del taller te contacta a ${contacto} para coordinar el pago y el despacho a ${pedido.ciudad}.`,
-        tagVariant: 'tag-outline'
+        mensaje: `Registramos tu pedido. Alguien del taller te contacta al ${contacto} para coordinar el pago y el despacho a ${pedido.ciudad}.`
       }
   }
 }

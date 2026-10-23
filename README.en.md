@@ -16,6 +16,11 @@ Currency **COP** (`$ 1.890.000`, es-CO). UI language: Colombian Spanish.
 ## Preview
 
 <p align="center">
+  <a href="docs/demo/nogal_demo.mp4"><img src="docs/demo/nogal_demo.jpg" alt="Watch the Nogal demo video (41 s, Spanish)" width="800"></a>
+  <br><sub>▶ Demo video (41 s, Spanish): a full purchase in the store and the order arriving in the factory panel.</sub>
+</p>
+
+<p align="center">
   <img src="docs/screenshots/01-home.png" alt="Home — hero and categories" width="800"><br>
   <sub>Public home — "We are the factory, not the middleman".</sub>
 </p>
@@ -40,6 +45,10 @@ Currency **COP** (`$ 1.890.000`, es-CO). UI language: Colombian Spanish.
   <tr>
     <td><img src="docs/screenshots/10-produccion.png" alt="Production" width="400"><br><sub>Production: workshop stages and materials to restock.</sub></td>
     <td><img src="docs/screenshots/11-resenas.png" alt="Review moderation" width="400"><br><sub>Customer reviews are moderated before they go live.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/12-confirmacion.png" alt="Order confirmation" width="400"><br><sub>Order confirmation styled as a workshop ticket, with order progress.</sub></td>
+    <td></td>
   </tr>
 </table>
 

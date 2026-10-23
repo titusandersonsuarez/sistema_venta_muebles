@@ -13,8 +13,6 @@ export function StoreLayout() {
           top: 0,
           zIndex: 20,
           background: 'var(--color-bg)',
-          flexWrap: 'wrap',
-          rowGap: 'var(--space-2)',
           gap: 'var(--space-3)',
           paddingLeft: 'max(var(--space-4),4vw)',
           paddingRight: 'max(var(--space-4),4vw)'
@@ -27,18 +25,19 @@ export function StoreLayout() {
         >
           Nogal
         </Link>
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-          <NavLink to="/" end>Inicio</NavLink>
+        <nav className="store-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <NavLink to="/" end className="nav-optional">Inicio</NavLink>
           <NavLink to="/catalogo">Catálogo</NavLink>
-          <a href="/#fabrica">La fábrica</a>
-          <NavLink to="/admin">Admin</NavLink>
-          <span style={{ width: 1, height: 18, background: 'var(--color-divider)' }} />
+          <a href="/#fabrica" className="nav-optional">La fábrica</a>
+          <NavLink to="/admin" className="nav-optional">Admin</NavLink>
+          <span className="nav-optional" style={{ width: 1, height: 18, background: 'var(--color-divider)' }} />
           <Link
             to="/carrito"
             className="btn btn-secondary"
-            style={{ fontSize: 13, textDecoration: 'none' }}
+            style={{ fontSize: 13.5, textDecoration: 'none', gap: 8 }}
+            aria-label={`Carrito, ${cantidad} ${cantidad === 1 ? 'mueble' : 'muebles'}`}
           >
-            Carrito · {cantidad}
+            Carrito <span className="cart-count">{cantidad}</span>
           </Link>
         </nav>
       </header>
